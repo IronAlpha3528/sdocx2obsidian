@@ -144,3 +144,4 @@ class FakeProgressReporter:
     def finished(self, outcome: ConversionOutcome) -> None:
         """Record individual conversion outcome."""
         self.outcomes.append(outcome)
+

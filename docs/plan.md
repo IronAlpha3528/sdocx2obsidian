@@ -8,7 +8,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P2 Format spike confirmation
 - [x] P3 Domain layer
 - [x] P4 Test helpers
-- [ ] P5 Core: reader and records
+- [x] P5 Core: reader and records
 - [ ] P6 Core: media and text
 - [ ] P7 Core: parser and renderer
 - [ ] P8 Infrastructure: scanner and extractor
