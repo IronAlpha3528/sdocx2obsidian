@@ -6,7 +6,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P0 Tooling smoke test
 - [x] P1 DDS approval and open questions
 - [x] P2 Format spike confirmation
-- [ ] P3 Domain layer
+- [x] P3 Domain layer
 - [ ] P4 Test helpers
 - [ ] P5 Core: reader and records
 - [ ] P6 Core: media and text
