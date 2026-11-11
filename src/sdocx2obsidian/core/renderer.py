@@ -31,3 +31,4 @@ class MarkdownRenderer:
                 parts.append(f"![[{assets_dir_name}/{block.filename}]]")
 
         return "\n\n".join(parts) + "\n"
+

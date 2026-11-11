@@ -33,3 +33,4 @@ def normalize_text_segment(text: str) -> str | None:
         return None
 
     return trimmed
+

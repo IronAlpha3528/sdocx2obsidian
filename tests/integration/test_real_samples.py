@@ -124,3 +124,38 @@ def test_real_sample_s2_golden_markdown() -> None:
         "![[Yolo_261029_130712_Assets/_261029_130708_202.m4a]]\n"
     )
     assert rendered == expected
+
+
+def test_real_sample_s3_empty_note() -> None:
+    """Real sample S3 with empty body yields empty Markdown with trailing newline."""
+    s3_path = next((p for p in REAL_SAMPLES if "Empty note with title" in p.name), None)
+    if s3_path is None:
+        pytest.skip("Sample S3 not found")
+    archive = _read_sample_archive(s3_path)
+    parsed = NoteParser().parse(archive)
+    rendered = MarkdownRenderer().render(parsed, "Assets")
+
+    assert parsed.title == "Empty note with title"
+    assert len(parsed.blocks) == 0
+    assert len(parsed.assets) == 0
+    assert rendered == "\n"
+
+
+def test_real_sample_s4_emoji_note() -> None:
+    """Real sample S4 with emojis and ZWJ decodes correctly and normalizes."""
+    s4_path = next((p for p in REAL_SAMPLES if "Note with emoji between texts" in p.name), None)
+    if s4_path is None:
+        pytest.skip("Sample S4 not found")
+    archive = _read_sample_archive(s4_path)
+    parsed = NoteParser().parse(archive)
+    rendered = MarkdownRenderer().render(parsed, "Assets")
+
+    assert parsed.title == "Note with emoji between texts"
+    assert len(parsed.blocks) == 1
+    assert "Today is a birthday🎉🎉🎂🎂🔥🙇\u200d♂️🐒" in rendered
+    expected_md = (
+        "Loreal ipsum\nYellow world\nIddbi\n"
+        "Today is a birthday🎉🎉🎂🎂🔥🙇\u200d♂️🐒\n"
+    )
+    assert rendered == expected_md
+

@@ -17,7 +17,7 @@ Status legend used for format facts: **VERIFIED** (confirmed on real samples S1 
 Define the complete design needed to implement `sdocx2obsidian`, a CLI that converts Samsung Notes `.sdocx` files into Obsidian Markdown with inline media, so that an agent can generate the code module by module without further design decisions.
 
 ### 1.2 Scope
-Everything in SRS section 1.3 In-Scope. The design resolves four gaps found while analyzing real files:
+Everything in SRS section 1.3 In-Scope. PDF attachments and PDF drawings are explicitly excluded from the current project scope. The design resolves four gaps found while analyzing real files:
 1. The `.sdocx` internals are binary, not XML.
 2. Media files are not hashed; they are named `<index>@<original name>`.
 3. Voice recordings have no inline position in the text.
@@ -57,7 +57,7 @@ The maintainer has approved incorporating the following amendments into the desi
 | D-04 | Output media name is the entry name without the `<digits>@` prefix, sanitized; duplicates after stripping keep the first name and get an index suffix on later ones | SRS-style stable names, no data loss |
 | D-05 | Audio media not referenced by any inline object are voice recordings, placed at the start, ordered by media index | Matches S1, keeps content, user decision |
 | D-06 | Media referenced by objects without a matching placeholder are appended at the end with a warning; placeholders without a usable object are dropped with a warning | Never lose content silently |
-| D-07 | Media files not classifiable as image or audio, and unreferenced images, are not exported; a warning is recorded | SRS scope limits |
+| D-07 | Media files not classifiable as image or audio (including PDF attachments), PDF drawings, and unreferenced images, are not exported; a warning is recorded | SRS scope limits; PDF attachments and PDF drawings out of scope |
 | D-08 | Processing is strictly sequential | Makes target resolution stateless and simple |
 | D-09 | Note name is the source file stem, sanitized | SRS FR-06 |
 | D-10 | Whole archive content that matters is held in memory (note file and media) with explicit size limits | Simple protocols; large media streaming is a future extension |
@@ -653,7 +653,7 @@ Detailed phase instructions, test tables, and gates are in `docs/plan.md` (phase
 | O-06 | Update SRS with amendments of 1.3 | **Resolved by maintainer:** All amendments incorporated directly into this DDS without modifying other documentation files. |
 
 ### 13.3 Future extensions (out of scope now)
-Streaming of large media; reading `mediaInfo.dat` for integrity checks; recursive scanning; optional Markdown escaping; parallel processing (would require target reservation); YAML frontmatter and timestamps.
+PDF attachments and PDF drawings; streaming of large media; reading `mediaInfo.dat` for integrity checks; recursive scanning; optional Markdown escaping; parallel processing (would require target reservation); YAML frontmatter and timestamps.
 
 ---
 

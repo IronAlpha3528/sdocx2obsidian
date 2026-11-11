@@ -73,3 +73,4 @@ def test_renderer_invalid_characters_raise_render_error() -> None:
     )
     with pytest.raises(RenderError):
         renderer.render(good_note, "Assets#1")
+

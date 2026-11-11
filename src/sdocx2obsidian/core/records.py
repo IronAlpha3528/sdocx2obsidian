@@ -55,11 +55,11 @@ def _is_valid_utf16_record(raw: bytes) -> bool:
     except UnicodeDecodeError:
         return False
     for ch in text:
-        if ch == "\0":
-            return False
-        if ch in ("\n", "\r", "\t", "\ufffc") or ch.isprintable():
+        if ch in ("\n", "\r", "\t", "\ufffc"):
             continue
-        return False
+        code = ord(ch)
+        if code < 32 or code == 127:
+            return False
     return True
 
 

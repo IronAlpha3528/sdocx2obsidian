@@ -39,3 +39,4 @@ class SourceScanner(ISourceScanner):
                 f"Failed to read source directory {source_dir}: {exc}",
                 cause=exc,
             ) from exc
+
