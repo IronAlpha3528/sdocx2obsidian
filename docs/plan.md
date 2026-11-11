@@ -4,7 +4,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 
 ## Progress tracker (the agent ticks boxes; it edits no other part of this file)
 - [x] P0 Tooling smoke test
-- [ ] P1 DDS approval and open questions
+- [x] P1 DDS approval and open questions
 - [ ] P2 Format spike confirmation
 - [ ] P3 Domain layer
 - [ ] P4 Test helpers

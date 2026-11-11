@@ -23,12 +23,13 @@ Everything in SRS section 1.3 In-Scope. The design resolves four gaps found whil
 3. Voice recordings have no inline position in the text.
 4. Exported file names carry a timestamp suffix (for example `Yolo_261029_130712.sdocx`).
 
-### 1.3 Required SRS amendments (for the maintainer)
+### 1.3 Approved SRS amendments
+The maintainer has approved incorporating the following amendments into the design:
 | SRS item | Observed reality | Design decision |
 |---|---|---|
 | FR-05 "retain hashed filenames" | Names look like `0@files_261028_230722_161.jpg` | Keep the original name but strip the `<index>@` prefix; resolve duplicates deterministically (D-04) |
-| FR-03 inline order | Voice recordings have no inline marker | Voice recordings are placed at the start of the note (D-05) |
-| FR-06 note naming | Stem includes an export timestamp | Follow the SRS: note name equals the source stem (D-09); flagged in open questions |
+| FR-03 inline order | Voice recordings have no inline marker; inline media placed at placeholders | Voice recordings are placed at the start of the note (D-05); inline media strictly follow the sequence and relative position of placeholders in text (D-03) |
+| FR-06 note naming | Stem includes an export timestamp | Follow the SRS: note name equals the source stem (D-09) |
 | FR-04 example names | `<HashedFileName.ext>` | Embed uses the stripped media file name |
 
 ### 1.4 Glossary
@@ -52,7 +53,7 @@ Everything in SRS section 1.3 In-Scope. The design resolves four gaps found whil
 |---|---|---|
 | D-01 | Parse `note.note` as a binary file with standard-library tools; no XML | Verified binary format |
 | D-02 | The extractor returns raw entry bytes; the parser interprets them | Keeps zip I/O out of `core/` |
-| D-03 | Inline objects are linked to placeholders by order: Nth placeholder is Nth object record | Verified consistent on S1 and S2; chain evidence in section 6.7; one reordered sample still wanted |
+| D-03 | Inline objects are linked to placeholders by document position order: Nth placeholder in the body text anchors the Nth inline object, strictly preserving the sequence and relative position with respect to the text | Verified consistent on S1 and S2; maintainer decision for O-01 confirms strict preservation of document sequence and relative position with text |
 | D-04 | Output media name is the entry name without the `<digits>@` prefix, sanitized; duplicates after stripping keep the first name and get an index suffix on later ones | SRS-style stable names, no data loss |
 | D-05 | Audio media not referenced by any inline object are voice recordings, placed at the start, ordered by media index | Matches S1, keeps content, user decision |
 | D-06 | Media referenced by objects without a matching placeholder are appended at the end with a warning; placeholders without a usable object are dropped with a warning | Never lose content silently |
@@ -359,6 +360,7 @@ Rules, applied to each text segment between placeholders:
 4. Collapse runs of three or more `\n` into exactly two.
 5. Trim leading and trailing newlines of the segment.
 6. Drop segments that are empty after trimming.
+7. Replace unrecognised emojis or invalid/unpaired surrogate code units with the designated Unicode replacement character  (`U+FFFD`) per maintainer selection (O-02).
 Single `\n` inside a paragraph is preserved (Obsidian shows it as a line break).
 Tests: S1 and S2 body text segments, mixed newlines, only whitespace, very long runs, Unicode text.
 
@@ -536,7 +538,7 @@ Paths via `pathlib`; embeds from strings; case-insensitive collision checks; Win
 Same input and destination state yield the same output: ordered scanning, ordered media handling, no timestamps, no randomness in output (staging names are random but never visible in results).
 
 ### 9.7 Encoding
-Body text UTF-16 decoded with replacement for invalid sequences and a warning; Markdown written as UTF-8.
+Body text UTF-16 decoded with replacement character `\uFFFD` () for invalid sequences or unrecognized emojis, with a warning; Markdown written as UTF-8.
 
 ---
 
@@ -640,15 +642,15 @@ Detailed phase instructions, test tables, and gates are in `docs/plan.md` (phase
 | R-06 | Plain text containing Markdown syntax changes appearance in Obsidian | Accepted per SRS; possible future option |
 | R-07 | Stripped media names can collide | Deterministic suffix rule (D-04) |
 
-### 13.2 Open questions for the maintainer
-| Id | Question | Default if unanswered |
+### 13.2 Open questions for the maintainer (Resolved in P1)
+| Id | Question | Maintainer Resolution |
 |---|---|---|
-| O-01 | Provide a note where an image is inserted above earlier objects, and one where an audio file is inserted between paragraphs after later items exist | Keep order-based linking |
-| O-02 | Notes with empty title, empty body, only media, emoji, bold or heading text, checklist, table, PDF attachment | Treat per sections 7.6 and 6.6 |
-| O-03 | Should note names use the in-note title instead of the exported stem (stems carry timestamps such as `_261029_130712`)? | Stem, per SRS FR-06 |
-| O-04 | Should a batch with failed files exit non-zero? | Exit 0 per AC-4 |
-| O-05 | Approve the added modules: `domain/naming.py`, `infrastructure/scanner.py`, the core helper modules, and the progress-reporter protocol | Approved with this DDS |
-| O-06 | Update the SRS with the amendments of 1.3 | Maintainer decides |
+| O-01 | Inline image/media ordering when items are inserted or reordered | **Resolved by maintainer:** Images must strictly follow the document visual sequence and relative position with respect to surrounding text in the note, anchored to the sequential order of U+FFFC placeholders in the body text (D-03). |
+| O-02 | Edge cases: unrecognized emojis, unsupported objects, empty notes | **Resolved by maintainer:** Unrecognized emojis and invalid surrogate code units are replaced with the Unicode replacement character `\uFFFD` () (DDS 7.5, 9.7, 14.2). Unsupported non-media objects are dropped with a warning. Empty title/body yield empty text. |
+| O-03 | Note naming: in-note title vs. exported stem | **Resolved:** Use source file stem verbatim per SRS FR-06 (D-09). |
+| O-04 | Batch exit code on individual note failure | **Resolved:** Process exit code is 0 when batch completes per SRS AC-4 (D-11); non-zero only for fatal setup errors. |
+| O-05 | Architecture additions: `domain/naming.py`, `infrastructure/scanner.py`, core helpers, `IProgressReporter` | **Resolved:** Approved as documented in DDS. |
+| O-06 | Update SRS with amendments of 1.3 | **Resolved by maintainer:** All amendments incorporated directly into this DDS without modifying other documentation files. |
 
 ### 13.3 Future extensions (out of scope now)
 Streaming of large media; reading `mediaInfo.dat` for integrity checks; recursive scanning; optional Markdown escaping; parallel processing (would require target reservation); YAML frontmatter and timestamps.
@@ -661,7 +663,7 @@ Streaming of large media; reading `mediaInfo.dat` for integrity checks; recursiv
 Modules lower_snake_case; classes PascalCase with protocols prefixed `I`; constants UPPER_SNAKE_CASE defined once per module; test files mirror module names.
 
 ### 14.2 Constants register
-Asset folder suffix `_Assets`; Markdown extension `.md`; source extension `.sdocx`; staging directory prefix `.sdocx2obsidian-staging-`; maximum note stem 120; maximum media stem 100; placeholder character U+FFFC; limits of 7.9.
+Asset folder suffix `_Assets`; Markdown extension `.md`; source extension `.sdocx`; staging directory prefix `.sdocx2obsidian-staging-`; maximum note stem 120; maximum media stem 100; placeholder character U+FFFC; unrecognized emoji / replacement character `\uFFFD` (); limits of 7.9.
 
 ### 14.3 Samples needed to harden the design
 Reordered insertion; empty title; empty body; media-only note; emoji and non-Latin text; formatted text; checklist; table; file attachment; multi-page long note; note from an older app version.
