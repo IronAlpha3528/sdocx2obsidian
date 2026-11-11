@@ -30,7 +30,9 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 
 **End of session**
 7. Report: files changed, tests added (count and names), requirement ids covered, full gate output, assumptions made, open questions.
-8. Tick the tracker, commit with the message form `P<n>: <phase title>`, and STOP. Do not start the next phase until the maintainer says so.
+8. Tick the tracker, commit locally to Git with the message form `P<n>: <phase title>`, and STOP. Do not start the next phase until the maintainer says so. Never push (`git push`) to GitHub or any remote repository; pushing is strictly reserved for the maintainer or requires their explicit instruction.
+
+**Git & Remote Policy**: All commits must strictly remain local (`git commit`). Never run `git push`.
 
 **Stop-and-ask triggers**: a DDS contract seems wrong or incomplete; a real sample disagrees with the DDS; a new dependency seems needed; a test cannot be made to pass without weakening it; a rule seems to conflict with the task.
 

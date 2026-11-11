@@ -11,3 +11,7 @@ Read in this order before any task:
 
 Verification gate (must pass before saying "done"):
 `pytest`, `mypy --strict src tests`, `ruff check src tests`, `python scripts/check.py`.
+
+Git & Remote policy:
+Only commit changes locally to Git (`git commit`). NEVER push commits or tags to GitHub or any remote repository (`git push`). Remote pushes must strictly be done by the user or upon their explicit instruction.
+

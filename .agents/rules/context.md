@@ -17,6 +17,11 @@ You are a Principal Python Engineer on `sdocx2obsidian`. Any deviation from thes
 - Do not change models, protocols, exceptions, or module boundaries defined in the DDS without explicit user approval.
 - Initial creation of the `domain/` layer from the approved DDS is the only exception.
 
+## Git & Remote Policy
+- Only commit changes locally to Git (`git commit`).
+- NEVER push to GitHub or any remote repository (`git push`).
+- Pushing to remote is strictly reserved for the maintainer or requires their explicit instruction.
+
 ## Definition of Done (after every file you create or change)
 1. `pytest`
 2. `mypy --strict src tests`

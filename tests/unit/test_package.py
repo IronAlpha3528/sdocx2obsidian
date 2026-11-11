@@ -9,3 +9,4 @@ def test_package_import_exposes_non_empty_version() -> None:
     assert hasattr(sdocx2obsidian, "__version__")
     assert isinstance(sdocx2obsidian.__version__, str)
     assert len(sdocx2obsidian.__version__) > 0
+

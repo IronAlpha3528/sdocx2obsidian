@@ -597,6 +597,7 @@ Branch coverage of `core/` and `application/` above 95 percent; whole package ab
 | Lint | `ruff check` with the rule set in `pyproject.toml` |
 | Architecture and function length | `python scripts/check.py` enforces layer imports, banned calls, frozen slots dataclasses in `domain/models.py`, and the 35-line limit |
 | CI | **SKIPPED — not incorporated yet.** A GitHub Actions workflow (Linux + Windows jobs running ruff, mypy, the checker, and pytest) is planned but has been deliberately omitted from the codebase. It must only be created on explicit maintainer instruction. |
+| Git remote policy | **Local commits only.** Never push to GitHub or any remote repository (`git push`). Remote pushes are strictly reserved for the maintainer or require explicit instruction. |
 | Gate | All four commands pass before any milestone is considered done |
 Note: the checker restricts `domain/` imports to `dataclasses, pathlib, typing, collections, enum, __future__`; the naming module must respect this.
 
