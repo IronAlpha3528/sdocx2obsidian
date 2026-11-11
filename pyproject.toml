@@ -20,10 +20,23 @@ packages = ["src/sdocx2obsidian"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers --cov=sdocx2obsidian --cov-report=term-missing"
+addopts = "-ra --strict-markers --cov=sdocx2obsidian --cov-branch --cov-report=term-missing"
 pythonpath = ["src", "."]
 markers = [
     "real_samples: tests using real .sdocx sample files in samples/",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src/sdocx2obsidian"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "\\.\\.\\.",
 ]
 
 [tool.mypy]

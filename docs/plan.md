@@ -15,7 +15,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P9 Infrastructure: storage
 - [x] P10 Application service
 - [x] P11 CLI and composition
-- [ ] P12 Acceptance, packaging, release readiness
+- [x] P12 Acceptance, packaging, release readiness
 
 ## Working protocol for every phase
 **Start of session**
