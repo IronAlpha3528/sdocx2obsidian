@@ -92,3 +92,4 @@ def test_storage_resolve_creates_nothing_on_disk(tmp_path: Path) -> None:
     repo = StorageRepository()
     repo.resolve_target_paths(tmp_path, "NonExistent")
     assert list(tmp_path.iterdir()) == []
+

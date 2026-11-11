@@ -13,7 +13,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P7 Core: parser and renderer
 - [x] P8 Infrastructure: scanner and extractor
 - [x] P9 Infrastructure: storage
-- [ ] P10 Application service
+- [x] P10 Application service
 - [ ] P11 CLI and composition
 - [ ] P12 Acceptance, packaging, release readiness
 
