@@ -10,7 +10,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P4 Test helpers
 - [x] P5 Core: reader and records
 - [x] P6 Core: media and text
-- [ ] P7 Core: parser and renderer
+- [x] P7 Core: parser and renderer
 - [ ] P8 Infrastructure: scanner and extractor
 - [ ] P9 Infrastructure: storage
 - [ ] P10 Application service
