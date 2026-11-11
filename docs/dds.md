@@ -17,7 +17,7 @@ Status legend used for format facts: **VERIFIED** (confirmed on real samples S1 
 Define the complete design needed to implement `sdocx2obsidian`, a CLI that converts Samsung Notes `.sdocx` files into Obsidian Markdown with inline media, so that an agent can generate the code module by module without further design decisions.
 
 ### 1.2 Scope
-Everything in SRS section 1.3 In-Scope. PDF attachments and PDF drawings are explicitly excluded from the current project scope. The design resolves four gaps found while analyzing real files:
+Everything in SRS section 1.3 In-Scope. Non-image objects like S-Pen ink, vector drawings, shapes, canvas stroke data, PDF attachments, and PDF drawings are not currently implemented in the code and are explicitly excluded; those types of data will be skipped with a warning. The design resolves four gaps found while analyzing real files:
 1. The `.sdocx` internals are binary, not XML.
 2. Media files are not hashed; they are named `<index>@<original name>`.
 3. Voice recordings have no inline position in the text.
@@ -57,7 +57,7 @@ The maintainer has approved incorporating the following amendments into the desi
 | D-04 | Output media name is the entry name without the `<digits>@` prefix, sanitized; duplicates after stripping keep the first name and get an index suffix on later ones | SRS-style stable names, no data loss |
 | D-05 | Audio media not referenced by any inline object are voice recordings, placed at the start, ordered by media index | Matches S1, keeps content, user decision |
 | D-06 | Media referenced by objects without a matching placeholder are appended at the end with a warning; placeholders without a usable object are dropped with a warning | Never lose content silently |
-| D-07 | Media files not classifiable as image or audio (including PDF attachments), PDF drawings, and unreferenced images, are not exported; a warning is recorded | SRS scope limits; PDF attachments and PDF drawings out of scope |
+| D-07 | Media files not classifiable as image or audio (including PDF attachments and .spi drawings), non-image objects (S-Pen ink, vector drawings, shapes, canvas stroke data), and unreferenced images, are not exported; a warning is recorded | Recognition of non-image drawing/stroke/PDF objects is not implemented; SRS scope limits |
 | D-08 | Processing is strictly sequential | Makes target resolution stateless and simple |
 | D-09 | Note name is the source file stem, sanitized | SRS FR-06 |
 | D-10 | Whole archive content that matters is held in memory (note file and media) with explicit size limits | Simple protocols; large media streaming is a future extension |
@@ -288,9 +288,9 @@ Each starts at a GUID marker located after the body text and extends to the next
 
 **Image object (VERIFIED, 3 of 3)** contains the byte sequence 06 00 3E 00 00 00 02 00 followed by a u16 media index. S1 image index 0; S2 indexes 0 and 1.
 
-**Attached audio object (VERIFIED, 2 of 2)** contains the byte pair 1F 03 followed by: u32 media index; u16 title length T; T UTF-16 units of display title (for example "Over_the_Horizon"); u16 duration length D; D UTF-16 units of text shaped `HH:MM:SS`. The record's tail also stores a u32 equal to the placeholder's character offset in the body (S1 119, S2 21). The display title differs from the media file name and is not used for naming.
+**Audio object (VERIFIED, 6 of 6)** contains an audio signature preceded by the object type header `01 00 02` (Kind: 2 = Audio): either `01 00 02 1F 03` (attached audio files, S1/S2) or `01 00 02 17 00` (voice recordings captured with Samsung Voice Recorder, S5). Both signatures are followed by: u32 media index; u16 title length T; T UTF-16 units of display title (for example "Over_the_Horizon", "180524 - 1"); u16 duration length D; D UTF-16 units of text shaped `HH:MM:SS`. The record's tail also stores a u32 equal to the placeholder's character offset in the body (or 0). The display title differs from the media file name and is not used for naming. Unpacking is strictly bounds-checked to prevent buffer overruns on unsupported records.
 
-**Other object kinds (UNKNOWN)**: records matching neither signature are treated as unsupported objects.
+**Other object kinds (UNKNOWN / UNSUPPORTED)**: Non-image objects such as S-Pen ink, vector drawings, shapes, canvas stroke data, lasso crops (`.spi`), and records matching neither signature are not currently implemented and are treated as unsupported objects (skipped with a warning).
 
 ### 6.7 Placeholder-to-object linking (D-03)
 - The Nth U+FFFC in the body corresponds to the Nth object record in file order (VERIFIED consistent in S1: image then audio; S2: image, image, audio — three adjacent placeholders).

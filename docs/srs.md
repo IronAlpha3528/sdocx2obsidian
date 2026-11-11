@@ -21,7 +21,7 @@
 | :--- | :--- | :--- |
 | **Input Formats** | Modern Samsung Notes `.sdocx` files | Legacy `.sdoc` and `.snb` formats; direct `AppData` scraping |
 | **Text Content** | Raw plain typed text and paragraph breaks | Rich-text styling (bold, italics, headers, colors, checklists, tables) |
-| **Visual & Ink Content** | Embedded raster images (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`) | Handwriting vector strokes, pen drawings, PDF drawings, and shapes |
+| **Visual & Ink Content** | Embedded raster images (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`) | S-Pen ink, vector drawings, shapes, canvas stroke data, PDF drawings, and `.spi` drawings (recognition is not currently implemented; these types are skipped) |
 | **Audio Content** | Embedded voice/audio recordings (`.m4a`, `.amr`, `.mp3`, `.wav`, `.ogg`) | Audio transcription or waveform generation |
 | **Non-Media Attachments** | (None) | PDF attachments, document attachments, and non-image/non-audio files |
 | **Metadata** | Original `.sdocx` filename (used as the note title) | Creation/modification timestamps, tags, folders, YAML frontmatter |
@@ -40,7 +40,7 @@
 ### FR-02: Plain Text Extraction
 * The system shall extract all typed text from each `.sdocx` note as raw plain text.
 * Rich-text formatting tags shall be stripped, leaving only the underlying plain text characters and standard paragraph breaks.
-* Handwriting vector strokes, PDF drawings, PDF attachments, and document metadata shall be silently ignored or treated as out-of-scope.
+* Non-image objects such as S-Pen ink, vector drawings, shapes, canvas stroke data, PDF drawings, PDF attachments, and document metadata are not currently implemented and shall be skipped with a non-fatal warning or treated as out-of-scope.
 
 ### FR-03: Contextual Inline Media Placement
 * The system shall preserve the exact sequential order in which text blocks, images, and audio clips appear within the original Samsung Note.

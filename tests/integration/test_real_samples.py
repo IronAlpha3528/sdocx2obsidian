@@ -159,3 +159,31 @@ def test_real_sample_s4_emoji_note() -> None:
     )
     assert rendered == expected_md
 
+
+def test_real_sample_s5_voice_recorder_audio() -> None:
+    """Real sample S5 decodes recorded voice audio objects (sig 17 00) and skips .spi."""
+    s5_path = next((p for p in REAL_SAMPLES if "Test Note" in p.name), None)
+    if s5_path is None:
+        pytest.skip("Sample S5 (Test Note) not found")
+    archive = _read_sample_archive(s5_path)
+    parsed = NoteParser().parse(archive)
+    rendered = MarkdownRenderer().render(parsed, "Test_Note_Assets")
+
+    assert parsed.title == "Test Note"
+    assert len(parsed.blocks) == 7
+    media_filenames = [b.filename for b in parsed.blocks if hasattr(b, "filename")]
+    assert media_filenames == [
+        "240610_200556_844.mp3",
+        "240610_200606_825.mp3",
+        "files240610_200620_779.jpg",
+        "240610_200704_044.mp3",
+        "240626_132453_378.m4a",
+    ]
+    assert any("page_0000011.spi" in w for w in parsed.warnings)
+    assert "![[Test_Note_Assets/240610_200556_844.mp3]]" in rendered
+    assert "![[Test_Note_Assets/240610_200606_825.mp3]]" in rendered
+    assert "![[Test_Note_Assets/files240610_200620_779.jpg]]" in rendered
+    assert "![[Test_Note_Assets/240610_200704_044.mp3]]" in rendered
+    assert "![[Test_Note_Assets/240626_132453_378.m4a]]" in rendered
+
+

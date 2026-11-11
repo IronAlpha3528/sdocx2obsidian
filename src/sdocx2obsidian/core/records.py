@@ -11,7 +11,11 @@ GUID_PATTERN = re.compile(
     rb"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 )
 IMAGE_SIG = bytes([0x06, 0x00, 0x3E, 0x00, 0x00, 0x00, 0x02, 0x00])
-AUDIO_SIG = bytes([0x1F, 0x03])
+AUDIO_SIGS: tuple[bytes, ...] = (
+    bytes([0x01, 0x00, 0x02, 0x1F, 0x03]),
+    bytes([0x01, 0x00, 0x02, 0x17, 0x00]),
+)
+AUDIO_SIG = AUDIO_SIGS[0]
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,40 +88,64 @@ def scan_placeholders(body: str) -> tuple[int, ...]:
     return tuple(i for i, ch in enumerate(body) if ch == "\ufffc")
 
 
+def _find_audio_signature(region: bytes) -> tuple[int, int]:
+    for sig in AUDIO_SIGS:
+        pos = region.find(sig)
+        if pos != -1:
+            return pos, len(sig)
+    return -1, 0
+
+
 def _classify_object(region: bytes) -> RawObjectRecord:
     has_img = region.find(IMAGE_SIG) != -1
-    has_audio = region.find(AUDIO_SIG) != -1
+    audio_pos, sig_len = _find_audio_signature(region)
+    has_audio = audio_pos != -1
     if has_img and has_audio:
         raise MalformedNoteError("Multiple object signatures found in one region")
     if has_img:
         pos = region.find(IMAGE_SIG)
+        if len(region) < pos + len(IMAGE_SIG) + 2:
+            return RawObjectRecord(kind="unsupported")
         idx = struct.unpack_from("<H", region, pos + len(IMAGE_SIG))[0]
         return RawObjectRecord(kind="image", media_index=idx)
     if has_audio:
-        return _decode_audio_object(region)
+        return _decode_audio_object(region, audio_pos, sig_len)
     return RawObjectRecord(kind="unsupported")
 
 
-def _decode_audio_object(region: bytes) -> RawObjectRecord:
-    pos = region.find(AUDIO_SIG) + len(AUDIO_SIG)
-    idx = struct.unpack_from("<I", region, pos)[0]
-    pos += 4
-    t_len = struct.unpack_from("<H", region, pos)[0]
-    pos += 2
-    title = region[pos : pos + t_len * 2].decode("utf-16le", errors="replace")
-    pos += t_len * 2
-    d_len = struct.unpack_from("<H", region, pos)[0]
-    pos += 2
-    dur = region[pos : pos + d_len * 2].decode("utf-16le", errors="replace")
-    pos += d_len * 2
-    tail = struct.unpack_from("<I", region, pos)[0] if len(region) >= pos + 4 else None
-    return RawObjectRecord(
-        kind="audio",
-        media_index=idx,
-        audio_title=title,
-        audio_duration=dur,
-        text_offset=tail,
-    )
+def _decode_audio_object(region: bytes, pos: int, sig_len: int) -> RawObjectRecord:
+    offset = pos + sig_len
+    try:
+        if len(region) < offset + 4:
+            return RawObjectRecord(kind="unsupported")
+        idx = struct.unpack_from("<I", region, offset)[0]
+        offset += 4
+        if len(region) < offset + 2:
+            return RawObjectRecord(kind="unsupported")
+        t_len = struct.unpack_from("<H", region, offset)[0]
+        offset += 2
+        if len(region) < offset + t_len * 2:
+            return RawObjectRecord(kind="unsupported")
+        title = region[offset : offset + t_len * 2].decode("utf-16le", errors="replace")
+        offset += t_len * 2
+        if len(region) < offset + 2:
+            return RawObjectRecord(kind="unsupported")
+        d_len = struct.unpack_from("<H", region, offset)[0]
+        offset += 2
+        if len(region) < offset + d_len * 2:
+            return RawObjectRecord(kind="unsupported")
+        dur = region[offset : offset + d_len * 2].decode("utf-16le", errors="replace")
+        offset += d_len * 2
+        tail = struct.unpack_from("<I", region, offset)[0] if len(region) >= offset + 4 else None
+        return RawObjectRecord(
+            kind="audio",
+            media_index=idx,
+            audio_title=title,
+            audio_duration=dur,
+            text_offset=tail,
+        )
+    except (struct.error, ValueError):
+        return RawObjectRecord(kind="unsupported")
 
 
 def read_records(data: bytes) -> RawRecordSet:

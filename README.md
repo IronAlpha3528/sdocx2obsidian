@@ -27,9 +27,9 @@ A robust Python 3.11+ CLI tool that batch-converts Samsung Notes `.sdocx` export
 | **Audio Recordings** | `.m4a`, `.amr`, `.mp3`, `.wav`, `.ogg` |
 | **Obsidian Links** | `![[<NoteStem>_Assets/<Filename>]]` with forward slashes |
 
-### Out of Scope (Ignored / Excluded)
-- **PDF Attachments & Document Files:** Document attachments are excluded from the conversion.
-- **PDF Drawings & S-Pen Vector Strokes:** Handwriting strokes and vector pen drawings (`.page` files) are ignored.
+### Out of Scope (Ignored / Excluded / Not Implemented)
+- **Non-Image Objects & S-Pen Drawings:** Recognition of non-image objects such as S-Pen ink, vector drawings, shapes, canvas stroke data, and `.spi` lasso drawings is not currently implemented; these elements are safely skipped with non-fatal warnings.
+- **PDF Attachments & Document Files:** Document attachments and PDF drawings (`.page` files) are excluded from the conversion.
 - **Rich Text Styling:** HTML/rich-text formatting tags (bold, italic, colors, tables, checkboxes) are stripped to raw plain text.
 - **Metadata Scraping:** Direct Samsung Cloud / AppData scraping, folder structures, tags, or YAML frontmatter.
 

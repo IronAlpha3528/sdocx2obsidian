@@ -9,7 +9,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 IMAGE_SIG = bytes([0x06, 0x00, 0x3E, 0x00, 0x00, 0x00, 0x02, 0x00])
-AUDIO_SIG = bytes([0x1F, 0x03])
+AUDIO_SIG = bytes([0x01, 0x00, 0x02, 0x1F, 0x03])
+AUDIO_RECORDED_SIG = bytes([0x01, 0x00, 0x02, 0x17, 0x00])
 DEFAULT_GUID_PREFIX = "00000000-0000-0000-0000-"
 
 
@@ -34,6 +35,7 @@ class ObjectDescriptor:
     title: str = ""
     duration: str = ""
     text_offset: int = 0
+    sig: bytes = AUDIO_SIG
 
     @classmethod
     def image(cls, media_index: int) -> ObjectDescriptor:
@@ -47,6 +49,7 @@ class ObjectDescriptor:
         title: str = "Audio",
         duration: str = "00:01:00",
         text_offset: int = 0,
+        sig: bytes = AUDIO_SIG,
     ) -> ObjectDescriptor:
         """Create an audio object descriptor."""
         return cls(
@@ -55,6 +58,7 @@ class ObjectDescriptor:
             title=title,
             duration=duration,
             text_offset=text_offset,
+            sig=sig,
         )
 
     @classmethod
@@ -113,7 +117,7 @@ class SdocxBuilder:
             t_bytes = obj.title.encode("utf-16le")
             d_bytes = obj.duration.encode("utf-16le")
             sig_part = (
-                AUDIO_SIG
+                obj.sig
                 + struct.pack("<I", obj.media_index)
                 + struct.pack("<H", len(obj.title))
                 + t_bytes

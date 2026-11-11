@@ -4,7 +4,7 @@ from __future__ import annotations
 import struct
 
 import pytest
-from tests.helpers.builder import ObjectDescriptor, SdocxBuilder
+from tests.helpers.builder import AUDIO_RECORDED_SIG, ObjectDescriptor, SdocxBuilder
 
 from sdocx2obsidian.core.records import (
     find_guid_markers,
@@ -116,3 +116,76 @@ def test_records_unsupported_object() -> None:
     assert len(records.objects) == 1
     assert records.objects[0].kind == "unsupported"
     assert records.objects[0].media_index is None
+
+
+def test_records_audio_recorded_signature_17_00() -> None:
+    """Audio objects using the 17 00 signature are decoded as audio objects."""
+    builder = SdocxBuilder(
+        title="Note with recorded audio",
+        body="Here is recording: \ufffc",
+        objects=[
+            ObjectDescriptor.audio(
+                media_index=5,
+                title="Voice Memo",
+                duration="00:02:15",
+                text_offset=20,
+                sig=AUDIO_RECORDED_SIG,
+            ),
+        ],
+    )
+    records = read_records(builder.build_note_bytes())
+    assert len(records.objects) == 1
+    assert records.objects[0].kind == "audio"
+    assert records.objects[0].media_index == 5
+    assert records.objects[0].audio_title == "Voice Memo"
+    assert records.objects[0].audio_duration == "00:02:15"
+
+
+def test_records_truncated_audio_object_returns_unsupported() -> None:
+    """Truncated audio object safely yields unsupported kind instead of struct.error."""
+    from sdocx2obsidian.core.records import _decode_audio_object
+
+    # Truncated before index
+    res1 = _decode_audio_object(b"\x01\x00\x02\x1f\x03\x00\x00", 0, 5)
+    assert res1.kind == "unsupported"
+
+    # Truncated in title
+    short_title = b"\x01\x00\x02\x1f\x03" + struct.pack("<IH", 1, 100) + b"short"
+    res2 = _decode_audio_object(short_title, 0, 5)
+    assert res2.kind == "unsupported"
+
+    # Truncated in duration
+    t_bytes = "Title".encode("utf-16le")
+    short_dur = (
+        b"\x01\x00\x02\x1f\x03"
+        + struct.pack("<IH", 1, len("Title"))
+        + t_bytes
+        + struct.pack("<H", 50)
+        + b"dur"
+    )
+    res3 = _decode_audio_object(short_dur, 0, 5)
+    assert res3.kind == "unsupported"
+
+
+def test_records_image_with_embedded_small_integers_does_not_collide() -> None:
+    """Small integers (23, 799) in image metadata do not cause signature collisions."""
+    from tests.helpers.builder import IMAGE_SIG
+
+    from sdocx2obsidian.core.records import _classify_object
+
+    # Construct an image region that has raw \x17\x00 and \x1f\x03 scattered in padding
+    region = (
+        b"\x00" * 50
+        + b"\x17\x00" * 5
+        + b"\x00" * 50
+        + b"\x1f\x03" * 5
+        + b"\x00" * 50
+        + IMAGE_SIG
+        + struct.pack("<H", 3)
+        + b"\x00" * 50
+    )
+    rec = _classify_object(region)
+    assert rec.kind == "image"
+    assert rec.media_index == 3
+
+
