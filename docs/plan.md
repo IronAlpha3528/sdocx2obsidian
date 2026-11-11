@@ -7,7 +7,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P1 DDS approval and open questions
 - [x] P2 Format spike confirmation
 - [x] P3 Domain layer
-- [ ] P4 Test helpers
+- [x] P4 Test helpers
 - [ ] P5 Core: reader and records
 - [ ] P6 Core: media and text
 - [ ] P7 Core: parser and renderer

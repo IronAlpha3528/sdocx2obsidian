@@ -88,3 +88,4 @@ class BatchResult:
     total: int
     succeeded: int
     failed: int
+

@@ -131,3 +131,4 @@ def test_naming_idempotence() -> None:
     stem = "My_Clean_Note (1)"
     assert sanitize_note_stem(stem) == stem
     assert sanitize_note_stem(sanitize_note_stem(stem)) == stem
+

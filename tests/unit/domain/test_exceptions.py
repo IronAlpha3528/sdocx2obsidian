@@ -58,3 +58,4 @@ def test_exceptions_catchable_via_base() -> None:
         with pytest.raises(Sdocx2ObsidianError) as exc_info:
             raise exc
         assert exc_info.value is exc
+

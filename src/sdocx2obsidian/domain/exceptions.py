@@ -55,3 +55,4 @@ class DestinationError(StorageError):
 
 class PersistError(StorageError):
     """Raised when staging, persisting, or moving output files fails."""
+

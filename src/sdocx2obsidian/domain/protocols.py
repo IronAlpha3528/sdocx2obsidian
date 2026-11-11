@@ -76,3 +76,4 @@ class IProgressReporter(Protocol):
     def finished(self, outcome: ConversionOutcome) -> None:
         """Notify reporter when an individual note conversion finishes."""
         ...
+
