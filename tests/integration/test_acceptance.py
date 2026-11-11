@@ -235,3 +235,4 @@ def test_t18_golden_outputs(tmp_path: Path) -> None:
     assert "![[S2_Assets/files_261029_130656_907.jpg]]\n\n" in s2_md
     assert "![[S2_Assets/files_261029_130656_922.jpg]]\n\n" in s2_md
     assert "![[S2_Assets/_261029_130708_202.m4a]]\n" in s2_md
+

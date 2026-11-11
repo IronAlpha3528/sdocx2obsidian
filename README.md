@@ -137,3 +137,4 @@ ruff check src tests
 # 4. Architectural layer and boundary checker
 python scripts/check.py
 ```
+
