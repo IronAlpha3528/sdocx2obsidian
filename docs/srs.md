@@ -8,7 +8,9 @@
 ## 1. Product Overview & Scope
 
 ### 1.1 Purpose
-`sdocx2obsidian` is a minimalistic Python Command Line Interface (CLI) tool that batch-converts modern Samsung Notes (`.sdocx`) files into Obsidian-compatible Markdown (`.md`) files, preserving the inline reading order of typed text, images, and audio recordings.
+`sdocx2obsidian` converts modern Samsung Notes (`.sdocx`) files into Obsidian-compatible Markdown (`.md`) files, preserving the inline reading order of typed text, images, and audio recordings. It operates in two official modes:
+1. **Command Line Interface (CLI):** A local Python CLI tool for desktop batch conversion.
+2. **Web Converter:** A client-side, zero-upload browser application executing 100% in WebAssembly via Pyodide.
 
 ### 1.2 Target Workflow
 1. The user manually exports their notes from Samsung Notes as `.sdocx` files into a local directory.
@@ -69,6 +71,23 @@
   2. Skip the corrupted file without leaving partial/broken output files in the destination directory.
   3. Continue processing the remaining `.sdocx` files in the batch.
 * Upon completing the batch, the CLI shall display a summary showing the total number of files processed, succeeded, and skipped/failed.
+
+### FR-08: In-Browser Client-Side Execution & Privacy (Web Mode)
+* In web mode, conversion shall execute 100% inside the user's browser runtime using Pyodide WebAssembly.
+* No note content, filenames, or binaries shall ever leave the user's browser.
+* Issue reporting links shall be completely sanitized, containing zero note text, titles, or filenames.
+
+### FR-09: Web Session Safety & Memory Caps (Web Mode)
+* Web conversion shall enforce pre-read safety limits:
+  * Maximum 50 MB per `.sdocx` archive.
+  * Maximum 100 MB total session byte budget.
+  * Maximum 5 files per conversion session.
+* Files exceeding limits shall be rejected before decompression without freezing the browser tab.
+
+### FR-10: Combined Vault ZIP Output (Web Mode)
+* Completed conversions in web mode shall bundle all converted notes and asset directories into a single root-level ZIP file.
+* Text files shall be compressed (deflated); media binaries shall be stored uncompressed; archive paths and timestamps shall be deterministic.
+* Unpacking the ZIP into an Obsidian vault shall immediately resolve all wikilink embeds.
 
 ---
 

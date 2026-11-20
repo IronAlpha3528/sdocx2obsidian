@@ -66,6 +66,10 @@ The maintainer has approved incorporating the following amendments into the desi
 | D-13 | Text is emitted as plain text without Markdown escaping | SRS FR-02; risk R-06 |
 | D-14 | Shared pure naming policy lives in `domain/naming.py` | Both `core` and `infrastructure` need it and cannot import each other |
 | D-15 | The core is split into small modules (reader, records, media, text, parser, renderer) | 35-line function limit |
+| D-16 | Browser-first deployment as a second product mode | Option B: client-side WebAssembly execution via Pyodide in a Web Worker; zero server compute, maximum user privacy |
+| D-17 | Plain-text preview in the web UI | Set via textContent assignment only; no HTML/Markdown parsing or media rendering of note content |
+| D-18 | Limits profile injected at construction | An immutable profile (`LimitsProfile`) passed to extractor and parser; CLI keeps desktop defaults, web adapter injects `WEB_LIMITS` |
+| D-19 | No server component in this release | Option A (FastAPI, Docker, server-side APIs) is formally deferred; hosting is 100% static on Vercel |
 
 ---
 
@@ -74,11 +78,12 @@ The maintainer has approved incorporating the following amendments into the desi
 ### 3.1 Layers and dependency rules
 | Layer | Package | Responsibility | May depend on |
 |---|---|---|---|
-| Presentation and composition | `cli.py`, `__main__.py` | Arguments, wiring, console output, exit codes | everything |
-| Application | `application/` | Per-file workflow, batch loop, outcomes | `domain` |
+| Presentation and composition (CLI) | `cli.py`, `__main__.py` | Arguments, wiring, console output, exit codes | everything except `web` |
+| Web composition root | `web/` (`adapter.py`) | In-browser session, conversion adapter, zip packaging | `domain`, `core`, `infrastructure`, `application` (no typer/rich) |
+| Application | `application/` | Per-file workflow, batch loop, outcomes | `domain`, `core`, `infrastructure` |
 | Core | `core/` | Pure parsing and rendering | `domain` |
-| Infrastructure | `infrastructure/` | Zip I/O, directory scanning, disk persistence | `domain` |
-| Domain | `domain/` | Models, protocols, exceptions, naming policy | stdlib only |
+| Infrastructure | `infrastructure/` | Zip I/O, directory scanning, disk persistence | `domain`, `core` |
+| Domain | `domain/` | Models, protocols, exceptions, naming policy, limits | stdlib only |
 
 `scripts/check.py` enforces these rules mechanically.
 
@@ -87,16 +92,18 @@ The maintainer has approved incorporating the following amendments into the desi
 src/sdocx2obsidian/
   __init__.py            version string only
   __main__.py            runs the CLI
-  cli.py                 composition root and presentation
-  domain/    models.py  protocols.py  exceptions.py  naming.py
+  cli.py                 CLI composition root and presentation
+  domain/    models.py  protocols.py  exceptions.py  naming.py  limits.py
   core/      reader.py  records.py  media.py  text.py  parser.py  renderer.py
   infrastructure/  scanner.py  extractor.py  storage.py
   application/     service.py
+  web/             __init__.py  adapter.py
+site/                    frontend UI, web worker, and vendored Pyodide runtime
 tests/
-  unit/{domain,core,infrastructure,application}/
+  unit/{domain,core,infrastructure,application,web}/
   integration/  test_acceptance.py  test_real_samples.py
   helpers/      builder.py  fakes.py
-docs/  srs.md  dds.md  format.md
+docs/  srs.md  dds.md  format.md  web-acceptance.md
 ```
 
 ### 3.3 Runtime flow for one note
@@ -182,6 +189,20 @@ Invariants: every MediaBlock filename is a key of assets; every asset key appear
 
 **BatchResult** — `outcomes` (tuple of ConversionOutcome), `total`, `succeeded`, `failed` (ints; total equals succeeded plus failed).
 
+**LimitsProfile** (`domain/limits.py`) — frozen immutable configuration profile
+| Field | Type | Meaning |
+|---|---|---|
+| max_entries_inspected | int | Maximum archive entries inspected |
+| max_entry_uncompressed_bytes | int | Cap on single entry size (uncompressed) |
+| max_total_uncompressed_bytes | int | Cap on total extracted uncompressed bytes |
+| max_compression_ratio | float | Max compression ratio for entries > 1 MiB |
+| max_objects_per_note | int | Parser cap on embedded objects |
+| max_placeholders_per_note | int | Parser cap on inline placeholders |
+| max_file_size | int | Max upload size per archive |
+| max_session_bytes | int | Max upload bytes per session |
+| max_session_files | int | Max files per session |
+Provides `DEFAULT_LIMITS` (desktop CLI values) and `WEB_LIMITS` (hardened browser values).
+
 ### 4.3 Exception hierarchy
 Base: **Sdocx2ObsidianError**. Each carries a short human-readable message suitable for display and a chained cause when available.
 | Exception | Parent | Raised when |
@@ -201,6 +222,7 @@ Base: **Sdocx2ObsidianError**. Each carries a short human-readable message suita
 ### 4.4 Naming policy (`domain/naming.py`, pure functions and constants)
 | Concern | Rule |
 |---|---|
+| Direction controls removed | Strips Bidi override and isolate controls (U+200E, U+200F, U+061C, U+202A–U+202E, U+2066–U+2069); preserves ZWJ (`\u200D`), ZWNJ (`\u200C`), and variation selectors |
 | Characters replaced by underscore | `\ / : * ? " < > |` and control characters (all names); additionally `# ^ [ ]` (names used in links) |
 | Trim | Leading/trailing spaces; trailing dots |
 | Windows reserved stems | CON, PRN, AUX, NUL, COM1-9, LPT1-9 (case-insensitive) get a trailing underscore |
@@ -397,11 +419,21 @@ Algorithm:
 1. Open the file read-only as a ZIP inside a context manager.
 2. Check the entry count; for each entry validate the name: reject absolute paths, drive prefixes, backslashes, `..` segments, empty names, NUL characters; reject duplicate names; ignore directory entries.
 3. Select entries: exactly `note.note` and those under `media/` except `media/mediaInfo.dat`.
-4. For selected entries enforce size and ratio limits using the declared sizes, then read bytes (checking the actual length against the declaration).
+4. For selected entries enforce size and ratio limits using the declared sizes, then read bytes in bounded 64 KB chunks while tracking total uncompressed bytes against the limits profile (defense-in-depth against deceptive archive headers).
 5. Require `note.note`; its absence raises MissingEntryError.
 6. Return the archive value with the source stem as source_name and media keys relative to `media/`.
 Error mapping: bad ZIP, CRC failure, unsupported compression, truncated read, `zlib` errors map to CorruptArchiveError; OS errors map to CorruptArchiveError with the OS reason; limit and name violations map to UnsafeArchiveError. Source file is never written.
 Tests: valid minimal archive, not a zip, empty file, truncated archive, missing note, unsafe names, duplicate names, oversize with patched limits, high ratio, extra entries ignored.
+
+#### 7.9.1 Web Limits Profile (`WEB_LIMITS`)
+When running inside Pyodide or the web session adapter, `ZipArchiveExtractor` and `NoteParser` accept an injected `LimitsProfile`:
+- Single entry cap: 50 MiB (vs 512 MiB desktop)
+- Total uncompressed cap: 100 MiB (vs 1 GiB desktop)
+- Entries inspected: 500 (vs 5,000 desktop)
+- Max compression ratio: 50:1 (vs 200:1 desktop)
+- Parser inline objects cap: 2,500 (vs unlimited)
+- Parser placeholders cap: 20,000 (vs unlimited)
+Exceeding parser caps raises `MalformedNoteError` with a clear diagnostic message.
 
 ### 7.10 `infrastructure/storage.py` — implements IStorageRepository
 **prepare**: create directory and parents; verify it is a directory and writable by creating and removing a hidden probe file; errors map to DestinationError.
@@ -593,7 +625,7 @@ Branch coverage of `core/` and `application/` above 95 percent; whole package ab
 |---|---|
 | Package layout | `src` layout, built with hatchling, entry point `sdocx2obsidian` |
 | Python | 3.11 or newer |
-| Runtime dependencies | typer, rich |
+| Runtime dependencies | Core library: **zero** dependencies. CLI extra: `typer>=0.12`, `rich>=13` (`pip install "sdocx2obsidian[cli]"`) |
 | Dev dependencies | pytest, pytest-cov, mypy, ruff, pre-commit |
 | Types | `mypy --strict` over `src` and `tests` |
 | Lint | `ruff check` with the rule set in `pyproject.toml` |

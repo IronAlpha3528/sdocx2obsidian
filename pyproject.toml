@@ -6,6 +6,8 @@ build-backend = "hatchling.build"
 name = "sdocx2obsidian"
 version = "0.1.0"
 description = "Batch-convert Samsung Notes .sdocx files to Obsidian Markdown"
+license = { text = "MIT" }
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 

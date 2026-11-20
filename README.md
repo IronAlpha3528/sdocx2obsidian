@@ -45,17 +45,41 @@ Requires **Python 3.11** or newer.
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/IronAlpha3528/sdocx2obsidian.git
 cd sdocx2obsidian
 
-# Install the package
-pip install .
+# Install the CLI package with terminal dependencies
+pip install ".[cli]"
 ```
 
 For local development with test and quality tools:
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[cli,dev]"
 ```
+
+---
+
+## Web Converter (In-Browser)
+
+In addition to the CLI, `sdocx2obsidian` provides a completely browser-based web converter located in the `site/` folder. It converts `.sdocx` archives into Obsidian vaults using Pyodide (Python WebAssembly) directly inside the client's web browser, without any server-side processing.
+
+### Privacy Statement
+> The page converts notes entirely in the browser; files are never uploaded; nothing is stored; closing or refreshing the tab discards everything; the code is open source.
+
+### Web Limits & Safety
+- **Per-file limit:** 50 MB max per note archive.
+- **Session total:** 100 MB total uncompressed session limit.
+- **Batch size:** Up to 5 files per session.
+- **Mobile advisory:** Converting notes with high-resolution photos or audio recordings demands substantial browser memory. If memory pressure causes tab reloads or pauses on mobile devices, continue the conversion on a laptop or desktop computer.
+
+### Self-Hosting the Web Interface
+The `site/` directory contains all assets required to run the web tool. The Pyodide runtime (v0.26.4) and the `sdocx2obsidian` Python wheel are pinned and vendored locally in `site/vendor/`, requiring no external CDN dependencies or backend servers.
+
+To self-host locally:
+```bash
+python -m http.server -d site 8080
+```
+Then navigate to `http://localhost:8080` in any modern web browser.
 
 ---
 
@@ -121,12 +145,13 @@ src/sdocx2obsidian/
 ├── core/             # Pure binary parsing, text normalization, and markdown rendering
 ├── infrastructure/   # Safe zip archive extractor, source scanner, atomic storage
 ├── application/      # End-to-end conversion orchestration service
+├── web/              # Pyodide browser adapter session & in-memory zip packaging
 └── cli.py            # Typer and Rich presentation composition root
 ```
 
 ### Running the Verification Gate
 
-All code must pass four quality checks:
+All code must pass the Python gate and the frontend check:
 
 ```bash
 # 1. Run all unit and integration tests with branch coverage
@@ -140,5 +165,18 @@ ruff check src tests
 
 # 4. Architectural layer and boundary checker
 python scripts/check.py
+
+# 5. Frontend test suite (state machine, preview, issue links, node integration)
+cd site && npm run check
 ```
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+- Repository: [https://github.com/IronAlpha3528/sdocx2obsidian](https://github.com/IronAlpha3528/sdocx2obsidian)
+- Issue Tracker: [https://github.com/IronAlpha3528/sdocx2obsidian/issues](https://github.com/IronAlpha3528/sdocx2obsidian/issues)
+
 
