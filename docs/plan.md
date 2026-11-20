@@ -16,6 +16,11 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P10 Application service
 - [x] P11 CLI and composition
 - [x] P12 Acceptance, packaging, release readiness
+- [x] P13 Pyodide feasibility spike
+- [ ] P14 Packaging, limits profile, extractor and naming hardening
+- [ ] P15 Browser adapter and in-memory packaging
+- [ ] P16 Frontend and background worker (site/)
+- [ ] P17 Hosting, documentation, acceptance
 
 ## Working protocol for every phase
 **Start of session**
@@ -204,3 +209,53 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 4. Original `.sdocx` files are unchanged.
 5. No empty `_Assets` folders and no hidden staging leftovers.
 6. Open questions O-01 to O-06 are closed or consciously deferred.
+
+---
+
+## Web Deployment Phases (P13 – P17)
+Authority: `docs/web-implementation-brief.md`.
+
+*Deferred, Option A only:* Containerized server deployments (FastAPI, Docker, Railway, CORS middleware, server-side rate limiting) are formally deferred and out of scope. The web deployment executes 100% in the user's browser via Pyodide WebAssembly hosted statically on Vercel.
+
+## P13 — Pyodide feasibility spike
+**Goal:** prove or disprove that the existing package runs in the WebAssembly Python runtime.
+**Deliverable:** `docs/web-spike.md` with empirical measurements, filesystem compatibility checks, and verdict.
+**Gate:** maintainer approves the spike report.
+
+## P14 — Packaging, limits profile, extractor and naming hardening
+**Goal:** make the core installable in the browser runtime and safe for the web profile without changing CLI behavior.
+**Deliverables:**
+- Packaging: `typer` and `rich` moved to optional `cli` extra; core installs without dependencies.
+- Limits profile: immutable profile model in `domain`, injected at construction into extractor and parser.
+- Extractor: chunked, bounded entry reads against profile limits.
+- Parser: caps on objects (2,500) and placeholders (20,000).
+- Naming: removal of directional control characters (U+202A–U+202E, U+2066–U+2069).
+**Gate:** four Python commands pass; pure-Python wheel installs in Pyodide without Typer or Rich.
+
+## P15 — Browser adapter and in-memory packaging
+**Goal:** a clean session entry point producing downloadable ZIP output.
+**Deliverables:**
+- `src/sdocx2obsidian/web/` composition root (imports core/infrastructure/domain/application; no Typer/Rich).
+- Session interface: in-memory conversion, batch collision resolution, structured failure outcomes.
+- ZIP packaging: uncompressed media, compressed text, fixed timestamps, sorted entries.
+- `scripts/check.py` updated to enforce web composition root rules.
+**Gate:** four Python commands pass; coverage thresholds met.
+
+## P16 — Frontend and background worker (`site/`)
+**Goal:** static web page and Web Worker.
+**Deliverables:**
+- Static frontend in `site/` (no runtime JS frameworks; plain HTML/JS/CSS).
+- Web Worker running Pyodide and `sdocx2obsidian` wheel; cancellation via `worker.terminate()`.
+- State machine (idle, loading runtime, converting, done, error, cancelled).
+- Plain-text preview of converted Markdown (`textContent` assignment only).
+- Content security policy (CSP), three-step user guide, privacy statement, content-free issue link.
+**Gate:** `npm run check` and four Python commands pass.
+
+## P17 — Hosting, documentation, acceptance
+**Goal:** live static deployment and complete documentation.
+**Deliverables:**
+- Vercel static hosting configuration (`vercel.json` with security headers, long-lived caching).
+- Privacy verification network trace (zero third-party requests; zero data leaves browser).
+- README updates (web tool section, privacy statement, install instructions with extra).
+- Maintainer acceptance checklist and emergency shutoff procedure.
+**Gate:** maintainer tests live site on desktop and mobile, converts real notes, and verifies in Obsidian.
