@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+  <title>sdocx2obsidian — Samsung Notes to Obsidian Converter</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Live polite announcer for screen readers -->
+  <div id="live-announcer" aria-live="polite" class="sr-only"></div>
+
+  <div class="container">
+    <header>
+      <h1>sdocx2obsidian</h1>
+      <p class="subtitle">Convert Samsung Notes (.sdocx) into Obsidian Markdown vaults directly in your browser.</p>
+    </header>
+
+    <!-- Mobile Memory Warning Advisory -->
+    <aside class="advisory-banner" role="note" aria-label="Mobile Device Advisory">
+      <strong>Mobile Device Advisory:</strong> Converting notes containing high-resolution images or long voice recordings requires significant browser memory. If you experience performance issues, pauses, or tab reloads on mobile, please continue on a laptop or desktop computer.
+    </aside>
+
+    <!-- Three-Step Guide -->
+    <section class="guide-card" aria-labelledby="guide-heading">
+      <h2 id="guide-heading" style="font-size: 1.15rem; margin-top: 0;">How it works</h2>
+      <div class="guide-steps">
+        <div class="step">
+          <span class="step-num" aria-hidden="true">1</span>
+          <div><strong>Export:</strong> Share or export notes as <code>.sdocx</code> from Samsung Notes.</div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">2</span>
+          <div><strong>Drop:</strong> Select or drop your <code>.sdocx</code> files into the area below.</div>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">3</span>
+          <div><strong>Download:</strong> Download the generated ZIP and unpack directly into your Obsidian vault.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Drop Zone -->
+    <main>
+      <section id="drop-zone" class="drop-zone" tabindex="0" role="region" aria-label="File upload drop zone">
+        <div class="drop-icon" aria-hidden="true">📥</div>
+        <h3>Drop your Samsung Notes <code>.sdocx</code> files here</h3>
+        <p class="text-muted" style="margin: 0.25rem 0;">or choose files from your device</p>
+        <label for="file-input" class="btn-file-select">Choose Files</label>
+        <input type="file" id="file-input" multiple accept=".sdocx" class="sr-only">
+      </section>
+
+      <!-- Conversion Progress & Controls -->
+      <section id="conversion-panel" class="conversion-panel" style="display: none;" aria-live="polite">
+        <div class="progress-header">
+          <span id="status-label" style="font-weight: 600;">Preparing runtime...</span>
+          <span id="progress-text" class="text-muted">0 / 0</span>
+        </div>
+        <div class="progress-bar-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressbar-aria">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div class="action-row">
+          <button id="btn-cancel" class="btn btn-danger">Cancel</button>
+          <button id="btn-download" class="btn btn-success" style="display: none;">Download Vault (.zip)</button>
+        </div>
+      </section>
+
+      <!-- Results List -->
+      <section id="results-card" class="results-card" style="display: none;">
+        <h2 style="font-size: 1.15rem; margin-top: 0;">Converted Notes</h2>
+        <div id="results-list" class="results-list"></div>
+      </section>
+    </main>
+
+    <!-- Plain-Text Preview Modal (MD-3: textContent assignment only) -->
+    <div id="preview-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title" style="margin: 0; font-size: 1.1rem;">Note Preview</h3>
+          <button id="btn-close-modal" class="btn-sm" aria-label="Close preview">✕</button>
+        </div>
+        <div class="modal-body">
+          <pre id="preview-text"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Privacy Statement & Disclaimers -->
+    <footer>
+      <section class="privacy-box">
+        <strong>Privacy Statement:</strong> The page converts notes entirely in the browser; files are never uploaded; nothing is stored; closing or refreshing the tab discards everything; the code is open source.
+      </section>
+      <p style="margin-bottom: 0.5rem;">
+        Note: Obsidian will interpret <code>[[...]]</code> and <code>![[...]]</code> wikilinks to seamlessly link attached images, audio files, and recordings unpacked into your vault.
+      </p>
+      <p style="margin-bottom: 0.5rem;">
+        Unofficial tool. Not affiliated with, endorsed by, or sponsored by Samsung Electronics or Dynalist Inc. (Obsidian). The format is reverse-engineered and may break with future Samsung Notes updates.
+      </p>
+      <p>
+        Found an issue? <a id="link-general-issue" href="https://github.com/IronAlpha3528/sdocx2obsidian/issues/new" target="_blank" rel="noopener noreferrer">Report an issue on GitHub</a> (no private note data is ever sent).
+      </p>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
