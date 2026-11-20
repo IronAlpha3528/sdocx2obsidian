@@ -24,6 +24,23 @@ WINDOWS_RESERVED_STEMS: frozenset[str] = frozenset(
 
 BANNED_CHARS: frozenset[str] = frozenset('\\/:*?"<>|#^[]')
 
+BIDI_CONTROLS: frozenset[str] = frozenset(
+    {
+        "\u200e",  # LRM
+        "\u200f",  # RLM
+        "\u061c",  # ALM
+        "\u202a",  # LRE
+        "\u202b",  # RLE
+        "\u202c",  # PDF
+        "\u202d",  # LRO
+        "\u202e",  # RLO
+        "\u2066",  # LRI
+        "\u2067",  # RLI
+        "\u2068",  # FSI
+        "\u2069",  # PDI
+    }
+)
+
 
 def strip_media_prefix(entry_name: str) -> str:
     """Remove a leading sequence of decimal digits followed by @."""
@@ -34,10 +51,14 @@ def strip_media_prefix(entry_name: str) -> str:
 
 
 def _sanitize_stem_chars(raw: str) -> str:
-    cleaned = [
-        "_" if (ch in BANNED_CHARS or ord(ch) < 32 or ord(ch) == 127) else ch
-        for ch in raw
-    ]
+    cleaned: list[str] = []
+    for ch in raw:
+        if ch in BIDI_CONTROLS:
+            continue
+        if ch in BANNED_CHARS or ord(ch) < 32 or ord(ch) == 127:
+            cleaned.append("_")
+        else:
+            cleaned.append(ch)
     return "".join(cleaned).strip().rstrip(".")
 
 

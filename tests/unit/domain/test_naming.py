@@ -132,3 +132,37 @@ def test_naming_idempotence() -> None:
     assert sanitize_note_stem(stem) == stem
     assert sanitize_note_stem(sanitize_note_stem(stem)) == stem
 
+
+def test_naming_bidi_controls_stripped() -> None:
+    """Direction-override and invisible Bidi controls are stripped."""
+    # U+202E (RLO), U+202A (LRE), U+202C (PDF), U+200E (LRM), U+200F (RLM), U+2066-U+2069
+    malicious = "Note\u202eexe.txt\u202c"
+    sanitized = sanitize_note_stem(malicious)
+    assert sanitized == "Noteexe.txt"
+    assert "\u202e" not in sanitized
+    assert "\u202c" not in sanitized
+
+    # Media filename Bidi stripping
+    media_raw = "0@audio\u200e_test\u2069.m4a"
+    sanitized_media = sanitize_media_filename(media_raw)
+    assert sanitized_media == "audio_test.m4a"
+
+
+def test_naming_zwj_and_emoji_preserved() -> None:
+    """Zero-width joiners, non-joiners, and variation selectors must NOT be stripped."""
+    # Emoji with ZWJ: family emoji 👨‍👩‍👦 (\u200d)
+    family_stem = "Family 👨\u200d👩\u200d👦 Note"
+    sanitized = sanitize_note_stem(family_stem)
+    assert "\u200d" in sanitized
+    assert "👨\u200d👩\u200d👦" in sanitized
+
+    # Variation selector: ❤️ (\u2764\ufe0f)
+    heart_stem = "Heart \u2764\ufe0f"
+    sanitized_heart = sanitize_note_stem(heart_stem)
+    assert "\ufe0f" in sanitized_heart
+
+    # ZWNJ: \u200c
+    zwnj_stem = "Text\u200cPart"
+    sanitized_zwnj = sanitize_note_stem(zwnj_stem)
+    assert "\u200c" in sanitized_zwnj
+

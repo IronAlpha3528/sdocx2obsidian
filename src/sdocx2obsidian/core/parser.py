@@ -5,6 +5,7 @@ from sdocx2obsidian.core.media import MediaEntry, build_media_catalog
 from sdocx2obsidian.core.records import RawObjectRecord, read_records
 from sdocx2obsidian.core.text import normalize_text_segment
 from sdocx2obsidian.domain.exceptions import MalformedNoteError
+from sdocx2obsidian.domain.limits import DEFAULT_LIMITS, LimitsProfile
 from sdocx2obsidian.domain.models import (
     ContentBlock,
     MediaBlock,
@@ -18,6 +19,23 @@ from sdocx2obsidian.domain.models import (
 class NoteParser:
     """Orchestrates parsing of binary note and media into structured ParsedNote."""
 
+    def __init__(self, limits: LimitsProfile = DEFAULT_LIMITS) -> None:
+        self._limits = limits
+
+    def _check_record_caps(self, object_count: int, placeholder_count: int) -> None:
+        if self._limits.max_objects is not None and object_count > self._limits.max_objects:
+            raise MalformedNoteError(
+                f"Note object count exceeds limit ({object_count} > {self._limits.max_objects})"
+            )
+        if (
+            self._limits.max_placeholders is not None
+            and placeholder_count > self._limits.max_placeholders
+        ):
+            raise MalformedNoteError(
+                f"Note placeholder count exceeds limit "
+                f"({placeholder_count} > {self._limits.max_placeholders})"
+            )
+
     def parse(self, archive: SdocxArchive) -> ParsedNote:
         """Parse raw SdocxArchive into a ParsedNote."""
         if len(archive.note_bytes) < 38:
@@ -25,6 +43,7 @@ class NoteParser:
 
         catalog, cat_warn = build_media_catalog(archive.media)
         records = read_records(archive.note_bytes)
+        self._check_record_caps(len(records.objects), len(records.placeholder_offsets))
 
         referenced_indices: set[int] = set()
         media_slots, extra_media, obj_warn = self._process_objects(

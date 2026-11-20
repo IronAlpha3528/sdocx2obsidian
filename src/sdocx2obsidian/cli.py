@@ -4,8 +4,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated
 
-import typer
-from rich.console import Console
+try:
+    import typer
+    from rich.console import Console
+except ImportError:
+    import sys
+
+    sys.stderr.write(
+        "CLI dependencies are not installed. Install them with: pip install 'sdocx2obsidian[cli]'\n"
+    )
+    sys.exit(1)
 
 from sdocx2obsidian import __version__
 from sdocx2obsidian.application.service import ConversionService
@@ -130,3 +138,8 @@ def convert(
     """Convert Samsung Notes .sdocx files in source to Obsidian Markdown in dest."""
     service = _build_service()
     _run_batch(service, source, dest)
+
+
+def main() -> None:
+    """CLI execution entrypoint."""
+    app()

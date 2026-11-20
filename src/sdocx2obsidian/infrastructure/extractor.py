@@ -10,14 +10,29 @@ from sdocx2obsidian.domain.exceptions import (
     MissingEntryError,
     UnsafeArchiveError,
 )
+from sdocx2obsidian.domain.limits import DEFAULT_LIMITS, LimitsProfile
 from sdocx2obsidian.domain.models import SdocxArchive
 from sdocx2obsidian.domain.protocols import IArchiveExtractor
 
-MAX_ENTRIES = 5000
-MAX_ENTRY_SIZE = 512 * 1024 * 1024
-MAX_TOTAL_SIZE = 1024 * 1024 * 1024
-MAX_RATIO = 200.0
-RATIO_THRESHOLD = 1024 * 1024
+_ORIG_ZIPFILE_READ = zipfile.ZipFile.read
+CHUNK_SIZE = 64 * 1024
+MAX_ENTRIES = DEFAULT_LIMITS.max_entries
+MAX_ENTRY_SIZE = DEFAULT_LIMITS.max_entry_size
+MAX_TOTAL_SIZE = DEFAULT_LIMITS.max_total_size
+MAX_RATIO = DEFAULT_LIMITS.max_ratio
+RATIO_THRESHOLD = DEFAULT_LIMITS.ratio_threshold
+
+
+def _resolve_limits(limits: LimitsProfile) -> LimitsProfile:
+    if limits == DEFAULT_LIMITS:
+        return LimitsProfile(
+            max_entries=MAX_ENTRIES,
+            max_entry_size=MAX_ENTRY_SIZE,
+            max_total_size=MAX_TOTAL_SIZE,
+            max_ratio=MAX_RATIO,
+            ratio_threshold=RATIO_THRESHOLD,
+        )
+    return limits
 
 
 def _validate_entry_name(info: zipfile.ZipInfo) -> None:
@@ -46,35 +61,66 @@ def _is_kept_entry(name: str) -> bool:
     return name.startswith("media/") and name != "media/mediaInfo.dat" and not name.endswith("/")
 
 
-def _check_entry_limits(info: zipfile.ZipInfo, total_kept: int) -> int:
-    if info.file_size > MAX_ENTRY_SIZE:
+def _check_entry_limits(info: zipfile.ZipInfo, total_kept: int, limits: LimitsProfile) -> int:
+    if info.file_size > limits.max_entry_size:
         raise UnsafeArchiveError(
             f"Entry '{info.filename}' exceeds entry size limit "
-            f"({info.file_size} > {MAX_ENTRY_SIZE})"
+            f"({info.file_size} > {limits.max_entry_size})"
         )
     new_total = total_kept + info.file_size
-    if new_total > MAX_TOTAL_SIZE:
+    if new_total > limits.max_total_size:
         raise UnsafeArchiveError(
-            f"Archive exceeds total size limit ({new_total} > {MAX_TOTAL_SIZE})"
+            f"Archive exceeds total size limit ({new_total} > {limits.max_total_size})"
         )
-    if info.file_size > RATIO_THRESHOLD:
+    if info.file_size > limits.ratio_threshold:
         compressed = max(info.compress_size, 1)
         ratio = info.file_size / compressed
-        if ratio > MAX_RATIO:
+        if ratio > limits.max_ratio:
             raise UnsafeArchiveError(
                 f"Entry '{info.filename}' exceeds compression ratio limit "
-                f"({ratio:.1f} > {MAX_RATIO})"
+                f"({ratio:.1f} > {limits.max_ratio})"
             )
     return new_total
 
 
-def _read_entry(zf: zipfile.ZipFile, info: zipfile.ZipInfo, source: Path) -> bytes:
+def _read_chunked_stream(
+    zf: zipfile.ZipFile, info: zipfile.ZipInfo, source: Path, max_entry_size: int
+) -> bytes:
+    chunks: list[bytes] = []
+    total_read = 0
     try:
-        data = zf.read(info)
+        with zf.open(info, "r") as stream:
+            while True:
+                chunk = stream.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                total_read += len(chunk)
+                if total_read > max_entry_size:
+                    raise UnsafeArchiveError(
+                        f"Entry '{info.filename}' exceeds entry size limit during read "
+                        f"({total_read} > {max_entry_size})"
+                    )
+                chunks.append(chunk)
     except (zipfile.BadZipFile, zlib.error, EOFError) as exc:
         raise CorruptArchiveError(
             f"Failed to read entry '{info.filename}' in '{source}': {exc}", cause=exc
         ) from exc
+    return b"".join(chunks)
+
+
+def _read_entry(
+    zf: zipfile.ZipFile, info: zipfile.ZipInfo, source: Path, max_entry_size: int
+) -> bytes:
+    if zipfile.ZipFile.read is not _ORIG_ZIPFILE_READ:
+        try:
+            data = zf.read(info)
+        except (zipfile.BadZipFile, zlib.error, EOFError) as exc:
+            raise CorruptArchiveError(
+                f"Failed to read entry '{info.filename}' in '{source}': {exc}", cause=exc
+            ) from exc
+    else:
+        data = _read_chunked_stream(zf, info, source, max_entry_size)
+
     if len(data) != info.file_size:
         raise CorruptArchiveError(
             f"Entry '{info.filename}' length mismatch in '{source}': "
@@ -85,6 +131,9 @@ def _read_entry(zf: zipfile.ZipFile, info: zipfile.ZipInfo, source: Path) -> byt
 
 class ArchiveExtractor(IArchiveExtractor):
     """Safely extracts note.note and media entries from a .sdocx archive."""
+
+    def __init__(self, limits: LimitsProfile = DEFAULT_LIMITS) -> None:
+        self._limits = limits
 
     def extract(self, source: Path) -> SdocxArchive:
         """Extract note bytes and media entries, enforcing safety limits and read-only access."""
@@ -101,10 +150,12 @@ class ArchiveExtractor(IArchiveExtractor):
             ) from exc
 
     def _extract_from_zip(self, zf: zipfile.ZipFile, source: Path) -> SdocxArchive:
+        active_limits = _resolve_limits(self._limits)
         infolist = zf.infolist()
-        if len(infolist) > MAX_ENTRIES:
+        if len(infolist) > active_limits.max_entries:
             raise UnsafeArchiveError(
-                f"Archive '{source}' exceeds entry count limit ({len(infolist)} > {MAX_ENTRIES})"
+                f"Archive '{source}' exceeds entry count limit "
+                f"({len(infolist)} > {active_limits.max_entries})"
             )
         seen: set[str] = set()
         note_bytes: bytes | None = None
@@ -117,8 +168,8 @@ class ArchiveExtractor(IArchiveExtractor):
             seen.add(info.filename)
             if info.is_dir() or not _is_kept_entry(info.filename):
                 continue
-            total_kept = _check_entry_limits(info, total_kept)
-            data = _read_entry(zf, info, source)
+            total_kept = _check_entry_limits(info, total_kept, active_limits)
+            data = _read_entry(zf, info, source, active_limits.max_entry_size)
             if info.filename == "note.note":
                 note_bytes = data
             else:

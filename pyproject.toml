@@ -7,13 +7,14 @@ name = "sdocx2obsidian"
 version = "0.1.0"
 description = "Batch-convert Samsung Notes .sdocx files to Obsidian Markdown"
 requires-python = ">=3.11"
-dependencies = ["typer>=0.12", "rich>=13"]
+dependencies = []
 
 [project.optional-dependencies]
+cli = ["typer>=0.12", "rich>=13"]
 dev = ["pytest>=8", "pytest-cov>=5", "mypy>=1.10", "ruff>=0.5", "pre-commit>=3.7"]
 
 [project.scripts]
-sdocx2obsidian = "sdocx2obsidian.cli:app"
+sdocx2obsidian = "sdocx2obsidian.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sdocx2obsidian"]
