@@ -12,6 +12,9 @@ A robust Python 3.11+ CLI tool that batch-converts Samsung Notes `.sdocx` export
 - **Clean Vault Rule:** Notes containing only text never create empty asset subdirectories.
 - **Collision-Safe & Deterministic:** Automatically resolves naming collisions without overwriting existing vault notes by appending version numbers (e.g. `Note (1).md` and `Note (1)_Assets/`), updating all internal links accordingly.
 - **Atomic File Operations:** Uses hidden staging directories during writes so that a visible Markdown file guarantees all its referenced assets are present. If a failure occurs mid-write, partial outputs are rolled back cleanly.
+- **Batch Resilience & Fault Isolation:** Corrupted or invalid archives fail individually with clear diagnostics without aborting the batch, followed by an end-of-run summary.
+- **Archive Safety & Zip-Bomb Protection:** Defends against malicious or malformed archives with strict decompression bounds (5,000 entry limit, 512 MB entry limit, 1 GB total uncompressed size, 200x compression ratio) and path traversal rejection.
+- **Cross-Platform Sanitization:** Automatically cleans note stems and media filenames by removing banned characters (`\/:*?"<>|#^[]`), stripping Windows reserved stems (`CON`, `PRN`, `AUX`, etc.), and enforcing length constraints.
 - **Strict Read-Only Sources:** Source `.sdocx` archives are treated as immutable; file contents and modification timestamps are never altered.
 
 ---
@@ -21,11 +24,12 @@ A robust Python 3.11+ CLI tool that batch-converts Samsung Notes `.sdocx` export
 ### Supported (In-Scope)
 | Category | Supported Elements |
 |---|---|
-| **Input Archives** | Modern Samsung Notes `.sdocx` (ZIP container format) |
-| **Text Content** | Raw plain typed text, Unicode emojis, and paragraph breaks |
-| **Raster Images** | `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` |
-| **Audio Recordings** | `.m4a`, `.amr`, `.mp3`, `.wav`, `.ogg` |
-| **Obsidian Links** | `![[<NoteStem>_Assets/<Filename>]]` with forward slashes |
+| **Input Archives** | Modern Samsung Notes `.sdocx` (standard ZIP container format) |
+| **Text Content** | Raw plain typed text, Unicode emojis (including multi-byte & ZWJ sequences), and line breaks |
+| **Raster Images** | `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` (sequential inline placement) |
+| **Audio Recordings** | `.m4a`, `.amr`, `.mp3`, `.wav`, `.ogg` (both in-body attached clips and top-level voice memos) |
+| **Obsidian Links** | Native wikilinks `![[<NoteStem>_Assets/<Filename>]]` formatted with forward slashes |
+| **Asset Directory** | Dedicated `<NoteStem>_Assets/` folder created only when note contains images or audio |
 
 ### Out of Scope (Ignored / Excluded / Not Implemented)
 - **Non-Image Objects & S-Pen Drawings:** Recognition of non-image objects such as S-Pen ink, vector drawings, shapes, canvas stroke data, and `.spi` lasso drawings is not currently implemented; these elements are safely skipped with non-fatal warnings.
