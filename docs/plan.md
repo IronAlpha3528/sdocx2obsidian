@@ -18,7 +18,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - [x] P12 Acceptance, packaging, release readiness
 - [x] P13 Pyodide feasibility spike
 - [x] P14 Packaging, limits profile, extractor and naming hardening
-- [ ] P15 Browser adapter and in-memory packaging
+- [x] P15 Browser adapter and in-memory packaging
 - [ ] P16 Frontend and background worker (site/)
 - [ ] P17 Hosting, documentation, acceptance
 

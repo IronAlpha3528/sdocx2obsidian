@@ -35,6 +35,9 @@ def test_default_limits_match_desktop_constants() -> None:
     assert DEFAULT_LIMITS.ratio_threshold == 1024 * 1024
     assert DEFAULT_LIMITS.max_objects is None
     assert DEFAULT_LIMITS.max_placeholders is None
+    assert DEFAULT_LIMITS.max_file_size == 512 * 1024 * 1024
+    assert DEFAULT_LIMITS.max_session_bytes == 1024 * 1024 * 1024
+    assert DEFAULT_LIMITS.max_session_files == 5000
 
 
 def test_web_limits_match_brief_specification() -> None:
@@ -45,3 +48,6 @@ def test_web_limits_match_brief_specification() -> None:
     assert WEB_LIMITS.ratio_threshold == 1024 * 1024
     assert WEB_LIMITS.max_objects == 2500
     assert WEB_LIMITS.max_placeholders == 20000
+    assert WEB_LIMITS.max_file_size == 50 * 1024 * 1024
+    assert WEB_LIMITS.max_session_bytes == 100 * 1024 * 1024
+    assert WEB_LIMITS.max_session_files == 100

@@ -1,6 +1,7 @@
 """Integration tests against real .sdocx samples in samples/ directory."""
 from __future__ import annotations
 
+import io
 import zipfile
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from sdocx2obsidian.core.parser import NoteParser
 from sdocx2obsidian.core.records import read_records
 from sdocx2obsidian.core.renderer import MarkdownRenderer
 from sdocx2obsidian.domain.models import SdocxArchive
+from sdocx2obsidian.web.adapter import ConversionSession
 
 SAMPLES_DIR = Path(__file__).resolve().parent.parent.parent / "samples"
 REAL_SAMPLES = sorted(SAMPLES_DIR.glob("*.sdocx")) if SAMPLES_DIR.exists() else []
@@ -185,5 +187,27 @@ def test_real_sample_s5_voice_recorder_audio() -> None:
     assert "![[Test_Note_Assets/files240610_200620_779.jpg]]" in rendered
     assert "![[Test_Note_Assets/240610_200704_044.mp3]]" in rendered
     assert "![[Test_Note_Assets/240626_132453_378.m4a]]" in rendered
+
+
+def test_real_samples_through_web_session() -> None:
+    """Verify that all available real samples convert cleanly via ConversionSession."""
+    session = ConversionSession()
+    for sample_path in REAL_SAMPLES:
+        data = sample_path.read_bytes()
+        res = session.convert_note(sample_path.name, data)
+        assert res.status == "success"
+        assert res.markdown_name is not None
+        assert res.markdown_text is not None
+
+    zip_bytes, outcome = session.finish()
+    assert outcome.total == len(REAL_SAMPLES)
+    assert outcome.succeeded == len(REAL_SAMPLES)
+    assert outcome.failed == 0
+
+    with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zf:
+        namelist = zf.namelist()
+        for res in outcome.results:
+            assert res.markdown_name in namelist
+
 
 

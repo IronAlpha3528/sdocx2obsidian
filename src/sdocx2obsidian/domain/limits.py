@@ -15,6 +15,9 @@ class LimitsProfile:
     ratio_threshold: int
     max_objects: int | None = None
     max_placeholders: int | None = None
+    max_file_size: int = 512 * 1024 * 1024
+    max_session_bytes: int = 1024 * 1024 * 1024
+    max_session_files: int = 5000
 
 
 DEFAULT_LIMITS = LimitsProfile(
@@ -25,6 +28,9 @@ DEFAULT_LIMITS = LimitsProfile(
     ratio_threshold=1024 * 1024,
     max_objects=None,
     max_placeholders=None,
+    max_file_size=512 * 1024 * 1024,
+    max_session_bytes=1024 * 1024 * 1024,
+    max_session_files=5000,
 )
 
 WEB_LIMITS = LimitsProfile(
@@ -35,4 +41,7 @@ WEB_LIMITS = LimitsProfile(
     ratio_threshold=1024 * 1024,
     max_objects=2500,
     max_placeholders=20000,
+    max_file_size=50 * 1024 * 1024,
+    max_session_bytes=100 * 1024 * 1024,
+    max_session_files=100,
 )

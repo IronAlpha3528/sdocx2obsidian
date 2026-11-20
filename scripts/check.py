@@ -18,6 +18,7 @@ ALLOWED_INTERNAL: dict[str, set[str]] = {
     "core": {"domain", "core"},
     "infrastructure": {"domain", "infrastructure"},
     "application": {"domain", "application"},
+    "web": {"domain", "core", "infrastructure", "application", "web"},
 }
 # Domain is allow-listed; other layers are "stdlib minus banned".
 DOMAIN_STDLIB = {"dataclasses", "pathlib", "typing", "collections", "enum", "__future__"}
@@ -30,6 +31,7 @@ BANNED_CALLS: dict[str, set[str]] = {
     "core": {"open", "print"},
     "application": {"open", "print"},
     "infrastructure": {"print"},
+    "web": {"print"},
 }
 BANNED_CORE_ATTRS = {
     "exists", "write_text", "read_text", "write_bytes", "read_bytes",
@@ -113,9 +115,9 @@ def check_dataclasses(path: Path, tree: ast.AST) -> list[str]:
 def func_length(node: ast.FunctionDef | ast.AsyncFunctionDef) -> int:
     length = (node.end_lineno or node.lineno) - node.lineno + 1
     first = node.body[0]
-    if isinstance(first, ast.Expr) and isinstance(getattr(first, "value", None), ast.Constant):
-        if isinstance(first.value.value, str):
-            length -= (first.end_lineno or first.lineno) - first.lineno + 1
+    val = getattr(first, "value", None)
+    if isinstance(val, ast.Constant) and isinstance(val.value, str):
+        length -= (first.end_lineno or first.lineno) - first.lineno + 1
     return length
 
 
