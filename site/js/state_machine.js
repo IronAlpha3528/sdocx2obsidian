@@ -3,6 +3,7 @@
  */
 export const VALID_STATES = [
   "idle",
+  "files_selected",
   "loading_runtime",
   "converting",
   "done",
@@ -11,12 +12,13 @@ export const VALID_STATES = [
 ];
 
 const TRANSITIONS = {
-  idle: ["loading_runtime"],
-  loading_runtime: ["converting", "error", "cancelled"],
+  idle: ["loading_runtime", "files_selected"],
+  files_selected: ["loading_runtime", "idle"],
+  loading_runtime: ["converting", "error", "cancelled", "files_selected"],
   converting: ["done", "error", "cancelled"],
-  done: ["idle", "loading_runtime"],
-  error: ["idle", "loading_runtime"],
-  cancelled: ["idle", "loading_runtime"],
+  done: ["idle", "loading_runtime", "files_selected"],
+  error: ["idle", "loading_runtime", "files_selected"],
+  cancelled: ["idle", "loading_runtime", "files_selected"],
 };
 
 export class StateMachine {

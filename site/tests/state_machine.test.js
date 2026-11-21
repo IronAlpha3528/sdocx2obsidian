@@ -10,6 +10,9 @@ test("state machine initial state is idle", () => {
 test("state machine legal transitions", () => {
   const sm = new StateMachine();
 
+  sm.transition("files_selected");
+  assert.equal(sm.state, "files_selected");
+
   sm.transition("loading_runtime");
   assert.equal(sm.state, "loading_runtime");
 
@@ -23,6 +26,25 @@ test("state machine legal transitions", () => {
   assert.equal(sm.state, "idle");
 });
 
+test("state machine files_selected can reset to idle", () => {
+  const sm = new StateMachine();
+  sm.transition("files_selected");
+  sm.transition("idle");
+  assert.equal(sm.state, "idle");
+});
+
+test("state machine cancellation returns to files_selected", () => {
+  const sm = new StateMachine();
+  sm.transition("files_selected");
+  sm.transition("loading_runtime");
+  sm.transition("converting");
+  sm.transition("cancelled");
+  assert.equal(sm.state, "cancelled");
+
+  sm.transition("files_selected");
+  assert.equal(sm.state, "files_selected");
+});
+
 test("state machine cancellation during load", () => {
   const sm = new StateMachine();
   sm.transition("loading_runtime");
@@ -31,14 +53,6 @@ test("state machine cancellation during load", () => {
 
   sm.transition("idle");
   assert.equal(sm.state, "idle");
-});
-
-test("state machine cancellation during conversion", () => {
-  const sm = new StateMachine();
-  sm.transition("loading_runtime");
-  sm.transition("converting");
-  sm.transition("cancelled");
-  assert.equal(sm.state, "cancelled");
 });
 
 test("state machine error transition", () => {
