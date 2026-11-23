@@ -89,19 +89,17 @@ During conversion in the browser:
 
 ---
 
-## 4. Maintainer Acceptance Checklist (Live Web Tool)
+## 4. Maintainer Acceptance Checklist (Web Tool Functionality)
 
-Perform these verification checks on the live deployment:
+> **Notice:** Specific visual UI layouts and styling details are governed by a separate frontend design document. This checklist verifies core functional behavior.
 
-- [ ] **Desktop Chrome / Edge:** Drop multiple valid `.sdocx` notes; confirm progress bar animates, notes list populates, and ZIP download produces a valid Obsidian vault.
-- [ ] **Desktop Firefox:** Drop notes with emoji and embedded images; inspect plain-text preview; verify formatting and wikilinks.
-- [ ] **Desktop Safari:** Convert notes; confirm no WebAssembly instantiation or worker security policy warnings appear in console.
-- [ ] **Mobile Device (Android / iOS):**
-  - Verify advisory banner is visible: warns user regarding high memory usage for large notes.
-  - Convert a moderate note (~2-5 MB); verify ZIP downloads cleanly to device storage.
-- [ ] **Cancellation Check:** Drop a large batch and click **Cancel** mid-process; verify worker terminates promptly and UI resets to idle.
-- [ ] **Fault Tolerance Check:** Drop 1 corrupted `.sdocx` archive alongside 2 valid notes; verify valid notes succeed, corrupted note shows structured error message with an issue reporting link, and batch finishes cleanly.
-- [ ] **Issue Link Privacy Check:** Click "Report Issue" for a failed note; verify the opened GitHub issue URL contains only version numbers, browser family, error code, and size bucket (no note titles, filenames, or text).
+Perform these verification checks on the deployment:
+
+- [ ] **Cross-Browser Execution (Chrome, Firefox, Safari, Edge):** Convert valid `.sdocx` notes; verify WebAssembly loads and produces a valid downloadable Obsidian vault ZIP.
+- [ ] **Mobile Device Execution:** Verify files can be selected and converted cleanly without memory crashes.
+- [ ] **Cancellation Check:** Trigger a conversion and cancel mid-process; verify worker terminates cleanly.
+- [ ] **Fault Tolerance Check:** Pass corrupted `.sdocx` archives alongside valid notes; verify valid notes succeed, corrupted notes report clean errors, and process exits safely.
+- [ ] **Privacy Verification:** Verify zero external network requests leave the browser during and after load; verify issue link contains zero private note data.
 - [ ] **Obsidian Vault Verification:** Unpack downloaded ZIP into an empty Obsidian vault directory; verify note renders text and embeds images/audio clips seamlessly.
 
 ---

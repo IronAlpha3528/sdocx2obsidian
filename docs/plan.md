@@ -249,18 +249,17 @@ Authority: `docs/web-implementation-brief.md`.
 - Web Worker running Pyodide and `sdocx2obsidian` wheel; cancellation via `worker.terminate()`.
 - State machine (idle, loading runtime, converting, done, error, cancelled).
 - Plain-text preview of converted Markdown (`textContent` assignment only).
-- Content security policy (CSP), three-step user guide, privacy statement, content-free issue link.
+- Content security policy (CSP), privacy statement, content-free issue link.
+- *Notice:* Specific frontend visual layout and UI styling specifications will be detailed in a separate document.
 **Gate:** `npm run check` and four Python commands pass.
 
 ## P16b — Frontend redesign
 Authority: `docs/frontend-redesign-brief.md`.
-**Goal:** replace `site/` presentation layer with the iLovePDF tool-page pattern (S1 Idle, S2 Files Chosen, S3 Converting, S4 Done), built to HCI principles and design rules, minimal and modern.
+**Goal:** rebuild `site/` presentation layer with a fresh, clean interface.
 **Deliverables:**
-- `site/DESIGN.md`: design system documentation (tokens, computed contrast ratios, component specs, copy rules).
-- State machine extension: `files_selected` state with tests.
-- Re-architected `site/index.html` and `site/styles.css` using Section 4 tokens, system fonts, touch targets $\ge 44\text{px}$, sticky action bar on phone, zero third-party requests.
-- Confirmation modal on S2 for large notes ($\ge 25\text{MB}$) addressing mobile memory advisory.
-- Information sections: How it works, What is converted, Privacy, and FAQ.
+- Visual design, layout specifications, wireframes, and design tokens will be maintained in a separate frontend design document.
+- State machine support for file selection and conversion workflows.
+- Accessible, clean client-side interface complying with privacy and security constraints.
 **Gate:** `npm run check` and four Python commands pass.
 
 ## P17 — Hosting, documentation, acceptance

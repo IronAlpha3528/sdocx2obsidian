@@ -4,259 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
-  <title>sdocx2obsidian — Convert Samsung Notes to Obsidian</title>
+  <title>sdocx2obsidian — Samsung Notes to Obsidian Converter</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <a href="#tool-area" class="skip-link">Skip to main content</a>
-  <div id="live-announcer" aria-live="polite" class="sr-only"></div>
+  <div id="app" class="container">
+    <header>
+      <h1>sdocx2obsidian</h1>
+      <p class="subtitle">Convert Samsung Notes (.sdocx) into Obsidian Markdown vaults directly in your browser.</p>
+    </header>
 
-  <!-- Page Navigation -->
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="#" class="wordmark" aria-label="sdocx2obsidian home">
-        <svg class="wordmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-        </svg>
-        <span class="wordmark-text">sdocx2obsidian</span>
-      </a>
-      <nav class="site-nav" aria-label="Page navigation">
-        <a href="#how-it-works">How it works</a>
-        <a href="#what-is-converted">What is converted</a>
-        <a href="#privacy">Privacy</a>
-        <a href="#faq">FAQ</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="page-main" id="tool-area">
-    <!-- Hero / Headline -->
-    <section class="hero-section">
-      <h1 class="hero-title">Convert Samsung Notes to Obsidian</h1>
-      <p class="hero-subtitle">Turn .sdocx files into Markdown notes with their images and audio, ready for your vault.</p>
-    </section>
-
-    <!-- Tool Container -->
-    <section class="tool-card" aria-label="Conversion tool">
-      <!-- S1: Idle View -->
-      <div id="view-idle" class="tool-view">
-        <div id="drop-zone" class="drop-area" tabindex="0" role="region" aria-label="Drop area to select files">
-          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <label for="file-input" class="btn btn-primary btn-large">Select .sdocx files</label>
-          <input type="file" id="file-input" multiple accept=".sdocx" class="sr-only">
-          <p id="drop-hint-text" class="drop-hint">or drop them here</p>
-        </div>
-        <p class="privacy-reassurance">Everything happens in your browser. Your notes never leave your device.</p>
-        <p id="runtime-loading-note" class="runtime-loading-note" style="display: none;" aria-live="polite">
-          Getting the converter ready. This happens once and is saved for next time.
-        </p>
-      </div>
-
-      <!-- S2: Files Chosen View -->
-      <div id="view-files-chosen" class="tool-view" style="display: none;">
-        <div class="view-header">
-          <h2 class="view-title">Your notes</h2>
-          <span id="files-summary-count" class="files-summary">0 files</span>
-        </div>
-        <div id="chosen-files-list" class="files-list" role="list"></div>
-        <div class="view-actions-row">
-          <label for="file-input-more" class="btn btn-secondary btn-sm">+ Add more files</label>
-          <input type="file" id="file-input-more" multiple accept=".sdocx" class="sr-only">
-          <span id="files-total-size" class="files-total-size">0 MB total</span>
-        </div>
-        <div class="primary-action-wrap">
-          <button id="btn-start-convert" class="btn btn-primary btn-large btn-block">Convert to Markdown</button>
-          <p class="limits-quiet">Up to 5 files, 50 MB each.</p>
-        </div>
-      </div>
-
-      <!-- S3: Converting View -->
-      <div id="view-converting" class="tool-view" style="display: none;">
-        <h2 class="view-title">Converting your notes</h2>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressbar-track">
-            <div id="progress-bar-fill" class="progress-bar-fill"></div>
-          </div>
-          <span id="progress-percent" class="progress-percent">0%</span>
-        </div>
-        <div id="converting-files-list" class="files-list" role="list"></div>
-        <div class="cancel-wrap">
-          <button id="btn-cancel" class="btn btn-secondary">Cancel</button>
-        </div>
-      </div>
-
-      <!-- S4: Done View -->
-      <div id="view-done" class="tool-view" style="display: none;">
-        <h2 class="view-title">Your notes are ready</h2>
-        <div class="done-actions-top">
-          <button id="btn-download-zip" class="btn btn-primary btn-large btn-block">Download ZIP</button>
-          <p id="done-summary-text" class="done-summary-text">All notes converted successfully.</p>
-        </div>
-        <div id="done-files-list" class="files-list" role="list"></div>
-        <div class="import-tip-box">
-          <svg class="tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          <p>Unzip the folder into your Obsidian vault. Images and audio appear inside each note.</p>
-        </div>
-        <div class="start-over-wrap">
-          <button id="btn-start-over" class="btn-text">Convert more notes</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Informational Content Sections -->
-    <div class="info-content-wrap">
-      <!-- How it Works -->
-      <section id="how-it-works" class="info-section" aria-labelledby="heading-how-it-works">
-        <h2 id="heading-how-it-works" class="info-title">How it works</h2>
-        <ol class="steps-list">
-          <li class="step-item">
-            <span class="step-number" aria-hidden="true">1</span>
-            <div><strong>Export:</strong> Export a note from Samsung Notes as a <code>.sdocx</code> file to your device.</div>
-          </li>
-          <li class="step-item">
-            <span class="step-number" aria-hidden="true">2</span>
-            <div><strong>Select or drop:</strong> Select or drop your <code>.sdocx</code> files into this tool.</div>
-          </li>
-          <li class="step-item">
-            <span class="step-number" aria-hidden="true">3</span>
-            <div><strong>Download:</strong> Download the ZIP and unzip it directly into your Obsidian vault.</div>
-          </li>
-        </ol>
+    <main>
+      <!-- Ready for new frontend implementation -->
+      <section class="placeholder-card">
+        <p>Frontend implementation reset. Ready to design fresh interface.</p>
       </section>
+    </main>
 
-      <!-- What is Converted -->
-      <section id="what-is-converted" class="info-section" aria-labelledby="heading-what-is-converted">
-        <h2 id="heading-what-is-converted" class="info-title">What is converted</h2>
-        <div class="conversion-scope-grid">
-          <div class="scope-box scope-included">
-            <h3 class="scope-heading">Converted in original order</h3>
-            <ul class="scope-list">
-              <li>Typed plain text and paragraph breaks</li>
-              <li>Embedded images (PNG, JPG, GIF, WebP)</li>
-              <li>Voice recordings and attached audio clips</li>
-              <li>Standard emojis and non-Latin scripts</li>
-            </ul>
-          </div>
-          <div class="scope-box scope-excluded">
-            <h3 class="scope-heading">Skipped</h3>
-            <ul class="scope-list">
-              <li>Rich-text styling (bold, colors, highlight)</li>
-              <li>S-Pen handwriting, ink, and vector drawings</li>
-              <li>PDF and non-media document attachments</li>
-              <li>Canvas strokes and lasso crops (.spi)</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <!-- Privacy -->
-      <section id="privacy" class="info-section" aria-labelledby="heading-privacy">
-        <h2 id="heading-privacy" class="info-title">Privacy</h2>
-        <div class="privacy-box">
-          <p class="privacy-statement-text">
-            <strong>Privacy Statement:</strong> The page converts notes entirely in the browser; files are never uploaded; nothing is stored; closing or refreshing the tab discards everything; the code is open source.
-          </p>
-          <p class="privacy-subtext">
-            After loading the static page, zero network requests are made. The Python converter runs locally inside your browser via WebAssembly.
-          </p>
-        </div>
-      </section>
-
-      <!-- FAQ -->
-      <section id="faq" class="info-section" aria-labelledby="heading-faq">
-        <h2 id="heading-faq" class="info-title">Frequently asked questions</h2>
-        <div class="faq-list">
-          <details class="faq-item">
-            <summary class="faq-question">Are my notes ever uploaded to a server?</summary>
-            <p class="faq-answer">No. Every step of the conversion runs entirely inside your browser's WebAssembly environment. Your notes and media never touch any external server.</p>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-question">Why were my drawings or handwriting skipped?</summary>
-            <p class="faq-answer">Samsung Notes stores S-Pen ink and drawings in proprietary vector formats that are not yet reverse-engineered into standard Markdown or SVG. To preserve your note without corruption, non-image drawings are skipped.</p>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-question">What happens when I close or refresh the tab?</summary>
-            <p class="faq-answer">All files and in-memory caches are discarded immediately. Nothing is saved in local storage or cookies.</p>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-question">Which Samsung Notes files are supported?</summary>
-            <p class="faq-answer">All modern Samsung Notes exported with the <code>.sdocx</code> extension. Legacy <code>.sdoc</code> or <code>.snb</code> formats from older Galaxy devices are not supported.</p>
-          </details>
-          <details class="faq-item">
-            <summary class="faq-question">How do I report a note that fails?</summary>
-            <p class="faq-answer">If a note fails, click "Report this problem" next to the failed note. It creates a privacy-safe GitHub issue containing only error codes and size buckets—never your note's title or contents.</p>
-          </details>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <!-- Large File Memory Advisory Confirmation Modal -->
-  <div id="advisory-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="advisory-modal-title">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 id="advisory-modal-title" class="modal-title">Large file memory advisory</h3>
-      </div>
-      <div class="modal-body">
-        <p class="modal-text">Converting notes with large photos or recordings requires heavy browser memory:</p>
-        <div id="advisory-files-list" class="advisory-list"></div>
-        <div class="notice-warning">
-          <strong>Mobile Notice:</strong> On phones or devices with limited RAM, converting files over 25 MB may cause browser tab reloads. We recommend continuing on a laptop or desktop computer if you experience slowdowns.
-        </div>
-        <p class="modal-question">Would you like to proceed with conversion?</p>
-      </div>
-      <div class="modal-footer">
-        <button id="btn-advisory-cancel" class="btn btn-secondary">Cancel</button>
-        <button id="btn-advisory-continue" class="btn btn-primary">Continue conversion</button>
-      </div>
-    </div>
+    <footer>
+      <p>Unofficial tool. Not affiliated with Samsung Electronics or Obsidian.</p>
+    </footer>
   </div>
-
-  <!-- Plain-Text Preview Modal (MD-3: textContent assignment only) -->
-  <div id="preview-modal" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title">
-    <div class="modal-card modal-large">
-      <div class="modal-header">
-        <h3 id="preview-modal-title" class="modal-title">Note preview</h3>
-        <div class="preview-actions">
-          <button id="btn-copy-preview" class="btn btn-secondary btn-sm">Copy text</button>
-          <button id="btn-close-preview" class="btn-icon-close" aria-label="Close preview">&times;</button>
-        </div>
-      </div>
-      <div class="modal-body modal-code-body">
-        <pre id="preview-text-block"></pre>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sticky Bottom Action Bar for Mobile -->
-  <div id="mobile-sticky-bar" class="mobile-sticky-bar" style="display: none;">
-    <button id="btn-mobile-action" class="btn btn-primary btn-large btn-block">Convert to Markdown</button>
-  </div>
-
-  <!-- Footer -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <p class="footer-disclaimer">Unofficial open-source tool. Not affiliated with Samsung or Obsidian.</p>
-      <p class="footer-links">
-        <a href="https://github.com/IronAlpha3528/sdocx2obsidian" target="_blank" rel="noopener noreferrer">Source Code</a>
-        &middot;
-        <a href="https://github.com/IronAlpha3528/sdocx2obsidian/issues/new" target="_blank" rel="noopener noreferrer">Report this problem</a>
-        &middot;
-        MIT License
-      </p>
-    </div>
-  </footer>
 
   <script type="module" src="app.js"></script>
 </body>
