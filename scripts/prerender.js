@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const siteDir = path.resolve(__dirname, "../site");
@@ -98,8 +98,31 @@ async function main() {
     stdio: "inherit",
   });
 
-  const entryServerPath = path.resolve(ssrOutDir, "entry-server.js");
-  const { render } = await import(`file://${entryServerPath.replace(/\\/g, "/")}`);
+  // Vite may output entry-server.mjs or entry-server.js depending on OS, Rollup, and ESM resolution
+  const candidatePaths = [
+    path.resolve(ssrOutDir, "entry-server.mjs"),
+    path.resolve(ssrOutDir, "entry-server.js"),
+  ];
+  let entryServerPath = candidatePaths.find((p) => fs.existsSync(p));
+  if (!entryServerPath && fs.existsSync(ssrOutDir)) {
+    const files = fs.readdirSync(ssrOutDir);
+    const match = files.find(
+      (f) => f.startsWith("entry-server.") && (f.endsWith(".js") || f.endsWith(".mjs"))
+    );
+    if (match) {
+      entryServerPath = path.resolve(ssrOutDir, match);
+    }
+  }
+
+  if (!entryServerPath) {
+    const existing = fs.existsSync(ssrOutDir) ? fs.readdirSync(ssrOutDir) : [];
+    throw new Error(
+      `SSR entry bundle not found in ${ssrOutDir}. Directory contents: ${JSON.stringify(existing)}`
+    );
+  }
+
+  console.log(`==> Loading SSR entry bundle from ${entryServerPath}...`);
+  const { render } = await import(pathToFileURL(entryServerPath).href);
 
   const templatePath = path.resolve(distDir, "index.html");
   if (!fs.existsSync(templatePath)) {
