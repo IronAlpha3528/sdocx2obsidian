@@ -44,27 +44,20 @@ export const ConverterWorkspace: React.FC<ConverterWorkspaceProps> = ({
   onReset,
 }) => {
   return (
-    <section id="converter" className="converter-section" aria-label="Converter Workspace">
-      <div className="section-container">
-        <div className="converter-card">
-          <div className="converter-card-header">
-            <h2 className="converter-card-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-base)" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="12" y1="8" x2="12" y2="16" />
-                <line x1="8" y1="12" x2="16" y2="12" />
-              </svg>
-              Converter Workbench
-            </h2>
-            <span className="converter-status-pill">
-              {state === "idle" && "Ready for files"}
-              {state === "files_selected" && `${files.length} staged`}
-              {(state === "loading_runtime" || state === "converting") && "Processing in browser"}
-              {state === "done" && "Conversion complete"}
-              {state === "error" && "Action needed"}
-            </span>
-          </div>
+    <section id="converter" aria-label="Converter Workspace">
+      <div className="converter-container">
+        <div className="converter-header">
+          <span className="converter-heading">Converter Workbench</span>
+          <span className="converter-pill">
+            {state === "idle" && "Ready for files"}
+            {state === "files_selected" && `${files.length} staged`}
+            {(state === "loading_runtime" || state === "converting") && "Processing in browser"}
+            {state === "done" && "Conversion complete"}
+            {state === "error" && "Error"}
+          </span>
+        </div>
 
+        <div className="converter-body">
           {state === "idle" && (
             <DropZone onFilesSelected={onFilesSelected} error={validationError} />
           )}
@@ -99,28 +92,35 @@ export const ConverterWorkspace: React.FC<ConverterWorkspaceProps> = ({
           )}
 
           {state === "error" && (
-            <div style={{ textAlign: "center", padding: "24px 0" }}>
-              <h3 style={{ color: "var(--status-error-text)", marginBottom: "12px" }}>
-                Conversion Error
-              </h3>
-              <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
-                {validationError || "An unexpected error occurred during conversion."}
-              </p>
+            <div>
+              <div
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "4px",
+                  background: "var(--status-unsupported-bg)",
+                  border: "1px solid var(--status-unsupported-border)",
+                  color: "var(--status-unsupported-text)",
+                  fontSize: "0.875rem",
+                  marginBottom: "14px",
+                }}
+              >
+                {validationError || "A conversion error occurred."}
+              </div>
               <button type="button" className="btn-secondary" onClick={onReset}>
-                Try Again
+                Reset and try again
               </button>
             </div>
           )}
         </div>
-
-        {state === "confirming_large_files" && (
-          <LargeFileModal
-            largeFiles={files.filter((f) => f.isLarge)}
-            onConfirm={onModalConfirm}
-            onCancel={onModalCancel}
-          />
-        )}
       </div>
+
+      {state === "confirming_large_files" && (
+        <LargeFileModal
+          largeFiles={files.filter((f) => f.isLarge)}
+          onConfirm={onModalConfirm}
+          onCancel={onModalCancel}
+        />
+      )}
     </section>
   );
 };

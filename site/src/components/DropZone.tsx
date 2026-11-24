@@ -41,7 +41,6 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, error }) =>
     if (e.target.files && e.target.files.length > 0) {
       onFilesSelected(e.target.files);
     }
-    // Reset so same file can be chosen again if removed
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -50,7 +49,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, error }) =>
   return (
     <div>
       <div
-        className={`dropzone-container ${isDragOver ? "drag-over" : ""}`}
+        className={`dropzone-box ${isDragOver ? "drag-over" : ""}`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -60,6 +59,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, error }) =>
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
             fileInputRef.current?.click();
           }
         }}
@@ -75,42 +75,23 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, error }) =>
           tabIndex={-1}
         />
 
-        <svg
-          className="dropzone-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-
-        <div>
-          <h2 className="dropzone-title">Select Samsung Notes (.sdocx) files</h2>
-          <p className="dropzone-subtext" style={{ marginTop: "4px" }}>
-            or drag & drop them directly into this area
-          </p>
+        <div className="dropzone-title">Drop .sdocx notes here, or click to browse</div>
+        <p className="dropzone-subtext">Select files directly from your computer or phone</p>
+        <div className="dropzone-limits">
+          Max 5 notes per batch · 50 MB per file · 100 MB session limit · .sdocx only
         </div>
-
-        <p className="dropzone-subtext">
-          Max 5 notes per batch · Up to 50 MB each · 100 MB session limit
-        </p>
       </div>
 
       {error && (
         <div
           style={{
-            marginTop: "16px",
-            padding: "12px 16px",
-            borderRadius: "8px",
-            background: "var(--status-error-bg)",
-            border: "1px solid var(--status-error-border)",
-            color: "var(--status-error-text)",
-            fontSize: "0.875rem",
+            marginTop: "12px",
+            padding: "8px 12px",
+            borderRadius: "4px",
+            background: "var(--status-unsupported-bg)",
+            border: "1px solid var(--status-unsupported-border)",
+            color: "var(--status-unsupported-text)",
+            fontSize: "0.825rem",
           }}
           role="alert"
         >

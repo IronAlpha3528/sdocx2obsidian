@@ -19,10 +19,14 @@ export const ConvertingProgress: React.FC<ConvertingProgressProps> = ({
   const progressPercent = total === 0 ? 0 : Math.round((currentIndex / total) * 100);
 
   return (
-    <div className="progress-card">
+    <div className="progress-container">
       <div className="progress-header">
-        <span className="progress-ticker">{statusText}</span>
-        <span className="progress-percent">{progressPercent}%</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.825rem" }}>
+          {statusText}
+        </span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>
+          {progressPercent}%
+        </span>
       </div>
 
       <div
@@ -32,50 +36,47 @@ export const ConvertingProgress: React.FC<ConvertingProgressProps> = ({
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div
-          className="progress-fill"
-          style={{ width: `${progressPercent}%` }}
-        />
+        <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
       </div>
 
-      <div className="file-list" style={{ marginTop: "16px" }}>
+      <div className="staged-list" style={{ marginTop: "12px", marginBottom: "16px" }}>
         {files.map((file, idx) => {
-          let chipClass = "waiting";
-          let chipLabel = "Waiting";
+          let statusLabel = "Waiting";
+          let badgeClass = "planned";
 
           if (file.status === "converting" || idx === currentIndex) {
-            chipClass = "converting";
-            chipLabel = "Converting...";
+            statusLabel = "Converting...";
+            badgeClass = "partial";
           } else if (file.status === "converted") {
-            chipClass = "converted";
-            chipLabel = "Converted";
+            statusLabel = "Converted";
+            badgeClass = "supported";
           } else if (file.status === "failed") {
-            chipClass = "failed";
-            chipLabel = "Failed";
+            statusLabel = "Failed";
+            badgeClass = "unsupported";
           }
 
           return (
             <div key={file.id} className="file-row">
-              <div className="file-info">
+              <div className="file-row-left">
                 <span className="file-name" title={file.name}>
                   {file.name}
                 </span>
                 <span className="file-size">({formatBytes(file.size)})</span>
               </div>
-              <span className={`status-chip ${chipClass}`}>{chipLabel}</span>
+              <span className={`status-badge ${badgeClass}`}>{statusLabel}</span>
             </div>
           );
         })}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button
           type="button"
           className="btn-secondary"
           onClick={onCancel}
-          style={{ width: "auto", minWidth: "180px" }}
+          style={{ padding: "6px 14px", fontSize: "0.825rem" }}
         >
-          Cancel Conversion
+          Cancel conversion
         </button>
       </div>
     </div>

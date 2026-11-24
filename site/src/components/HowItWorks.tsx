@@ -4,48 +4,39 @@ export const HowItWorks: React.FC = () => {
   const steps = [
     {
       number: "1",
-      title: "Select Samsung Notes",
-      description:
-        "Export notes from the Samsung Notes app as .sdocx files. Drag and drop them into the workbench or choose them from your files.",
-      meta: "Max 5 notes · 50MB per file",
+      title: "Export .sdocx files",
+      text: "In the Samsung Notes app on your phone or tablet, select notes and save them as Samsung Notes files (.sdocx).",
     },
     {
       number: "2",
-      title: "Local WASM Processing",
-      description:
-        "The Pyodide WebAssembly engine initializes in a background Web Worker, extracts binary note records, and formats Obsidian Wikilinks in memory.",
-      meta: "Zero Network Requests · 100% Offline",
+      title: "Convert in your browser",
+      text: "Drop your files into the workbench above. Pyodide WebAssembly parses note records and formats Wikilinks in local memory.",
     },
     {
       number: "3",
-      title: "Unpack into Obsidian",
-      description:
-        "Download obsidian_vault.zip. Extract the archive directly into your Obsidian vault folder and all notes and images will immediately link.",
-      meta: "Standard Markdown · Forward Slashes",
+      title: "Extract into Obsidian",
+      text: "Download obsidian_vault.zip and unpack it into your Obsidian vault folder. All notes, images, and audio link automatically.",
     },
   ];
 
   return (
-    <section id="how-it-works" className="how-it-works-section" aria-label="How It Works">
-      <div className="section-container">
-        <div className="section-header">
-          <span className="section-tag">Workflow</span>
-          <h2 className="section-title">How the Conversion Works</h2>
-          <p className="section-subtitle">
-            A seamless three-step migration with zero command-line tools or server dependencies required.
-          </p>
-        </div>
+    <section id="how-it-works" className="section-block" aria-label="How It Works">
+      <div className="section-header">
+        <h2 className="section-title">How the conversion works</h2>
+        <p className="section-description">
+          Three-step migration running entirely in browser memory.
+        </p>
+      </div>
 
-        <div className="workflow-steps-grid">
-          {steps.map((step, idx) => (
-            <div key={idx} className="workflow-step-card">
-              <div className="step-number-badge">{step.number}</div>
-              <h3 className="step-card-title">{step.title}</h3>
-              <p className="step-card-description">{step.description}</p>
-              <div className="step-card-meta">{step.meta}</div>
+      <div className="flow-list">
+        {steps.map((step) => (
+          <div key={step.number} className="flow-item">
+            <span className="flow-number">{step.number}</span>
+            <div className="flow-content">
+              <strong>{step.title}:</strong> {step.text}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </section>
   );

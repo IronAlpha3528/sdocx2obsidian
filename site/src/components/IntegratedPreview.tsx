@@ -30,7 +30,7 @@ export const IntegratedPreview: React.FC<IntegratedPreviewProps> = ({ files }) =
   };
 
   return (
-    <div className="preview-panel">
+    <div className="integrated-preview-panel">
       <div className="preview-toolbar">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {convertedFiles.length > 1 ? (
@@ -47,38 +47,30 @@ export const IntegratedPreview: React.FC<IntegratedPreviewProps> = ({ files }) =
               ))}
             </select>
           ) : (
-            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--text-primary)" }}>
               {currentFile.markdownName || `${currentFile.name.replace(/\.sdocx$/i, "")}.md`}
             </span>
           )}
 
           {typeof currentFile.assetCount === "number" && (
-            <span
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--text-muted)",
-                background: "var(--bg-surface-elevated)",
-                padding: "2px 8px",
-                borderRadius: "4px",
-              }}
-            >
-              {currentFile.assetCount} {currentFile.assetCount === 1 ? "asset" : "assets"} preserved
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              {currentFile.assetCount} {currentFile.assetCount === 1 ? "asset" : "assets"}
             </span>
           )}
         </div>
 
         <button
           type="button"
-          className="btn-secondary"
-          style={{ padding: "4px 10px", fontSize: "0.8rem" }}
+          className="btn-ghost"
+          style={{ padding: "3px 8px", fontSize: "0.775rem" }}
           onClick={handleCopy}
         >
-          {copied ? "Copied!" : "Copy Markdown"}
+          {copied ? "Copied" : "Copy Markdown"}
         </button>
       </div>
 
       {/* MD-3: Plain text rendered inside <pre><code> using formatPlainTextPreview */}
-      <pre className="preview-content">
+      <pre className="preview-pre">
         <code>{formatPlainTextPreview(currentFile.markdownText)}</code>
       </pre>
     </div>

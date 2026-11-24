@@ -1,12 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AppState, StagedFile, SessionOutcome } from "../types";
 import { Hero } from "../components/Hero";
 import { ConverterWorkspace } from "../components/ConverterWorkspace";
-import { Features } from "../components/Features";
 import { HowItWorks } from "../components/HowItWorks";
 import { PreviewShowcase } from "../components/PreviewShowcase";
+import { Features } from "../components/Features";
 import { Limitations } from "../components/Limitations";
-import { FinalCTA } from "../components/FinalCTA";
 
 interface HomePageProps {
   state: AppState;
@@ -28,15 +27,18 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = (props) => {
+  useEffect(() => {
+    document.title = "sdocx2obsidian — Convert Samsung Notes to Obsidian Markdown";
+  }, []);
+
   return (
-    <>
+    <div className="content-container">
       <Hero />
       <ConverterWorkspace {...props} />
-      <Features />
       <HowItWorks />
       <PreviewShowcase />
+      <Features />
       <Limitations />
-      <FinalCTA />
-    </>
+    </div>
   );
 };
