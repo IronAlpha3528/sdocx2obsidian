@@ -72,14 +72,22 @@ In addition to the CLI, `sdocx2obsidian` provides a completely browser-based web
 - **Batch size:** Up to 5 files per session.
 - **Mobile advisory:** Converting notes with high-resolution photos or audio recordings demands substantial browser memory. If memory pressure causes tab reloads or pauses on mobile devices, continue the conversion on a laptop or desktop computer.
 
-### Self-Hosting the Web Interface
-The `site/` directory contains all assets required to run the web tool. The Pyodide runtime (v0.26.4) and the `sdocx2obsidian` Python wheel are pinned and vendored locally in `site/vendor/`, requiring no external CDN dependencies or backend servers.
+### Running the Web Interface
+The web frontend is a React + TypeScript application located in the `site/` folder. The Pyodide runtime (v0.26.4) and the `sdocx2obsidian` Python wheel are pinned and vendored locally in `site/vendor/`, requiring no external CDN dependencies or backend servers.
 
-To self-host locally:
+To run the local development server:
 ```bash
-python -m http.server -d site 8080
+cd site
+pnpm install
+pnpm run dev
 ```
-Then navigate to `http://localhost:8080` in any modern web browser.
+
+To build and preview the production static SPA:
+```bash
+cd site
+pnpm run build
+pnpm run preview
+```
 
 ---
 

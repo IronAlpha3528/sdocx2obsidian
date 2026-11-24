@@ -1,6 +1,12 @@
 {
   "cleanUrls": true,
-  "outputDirectory": "site",
+  "outputDirectory": "site/dist",
+  "rewrites": [
+    {
+      "source": "/((?!vendor/|worker\\.js|assets/).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
