@@ -21,9 +21,23 @@ export const ConvertingProgress: React.FC<ConvertingProgressProps> = ({
   return (
     <div className="progress-container">
       <div className="progress-header">
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.825rem" }}>
-          {statusText}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth="2.5"
+            style={{ animation: "spin 1s linear infinite", flexShrink: 0 }}
+            aria-hidden="true"
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          <span style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.825rem" }}>
+            {statusText}
+          </span>
+        </div>
         <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>
           {progressPercent}%
         </span>

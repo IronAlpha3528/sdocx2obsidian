@@ -33,7 +33,7 @@ export function validateFiles(
     if (!file.name.toLowerCase().endsWith(".sdocx")) {
       return {
         valid: newValid,
-        error: `"${file.name}" is not a valid Samsung Notes file. Only .sdocx files are supported.`,
+        error: `"${file.name}" is not a supported file. Only .sdocx files are supported. Next step: Export your notes from Samsung Notes using "Save as file" -> "Samsung Notes file (*.sdocx)".`,
       };
     }
 
@@ -41,7 +41,7 @@ export function validateFiles(
     if (existingFiles.length + newValid.length >= MAX_FILES) {
       return {
         valid: newValid,
-        error: `Maximum ${MAX_FILES} notes can be converted in a single session.`,
+        error: `Maximum ${MAX_FILES} notes can be converted in a single session. Next step: Remove excess files or convert them in separate batches.`,
       };
     }
 
@@ -49,7 +49,7 @@ export function validateFiles(
     if (file.size > MAX_FILE_SIZE) {
       return {
         valid: newValid,
-        error: `"${file.name}" exceeds the 50 MB single-note limit (${formatBytes(file.size)}).`,
+        error: `"${file.name}" exceeds the 50 MB single-note limit (${formatBytes(file.size)}). Next step: Separate high-resolution photos or audio memos into smaller notes before converting.`,
       };
     }
 
@@ -57,7 +57,7 @@ export function validateFiles(
     if (accumulatedSize + file.size > MAX_SESSION_SIZE) {
       return {
         valid: newValid,
-        error: `Total session input exceeds the 100 MB limit.`,
+        error: `Total session input exceeds the 100 MB limit. Next step: Convert notes in batches of 1 to 3 files.`,
       };
     }
 

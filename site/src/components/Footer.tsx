@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export const Footer: React.FC = () => {
   return (
@@ -6,6 +7,21 @@ export const Footer: React.FC = () => {
       <div className="content-container">
         <div className="footer-row">
           <ul className="footer-links">
+            <li>
+              <Link to="/faq" className="footer-link">
+                FAQ
+              </Link>
+            </li>
+            <li>
+              <Link to="/privacy" className="footer-link">
+                Privacy
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="footer-link">
+                About
+              </Link>
+            </li>
             <li>
               <a
                 href="https://github.com/IronAlpha3528/sdocx2obsidian"
@@ -23,23 +39,13 @@ export const Footer: React.FC = () => {
                 rel="noopener noreferrer"
                 className="footer-link"
               >
-                Report an Issue
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://github.com/IronAlpha3528/sdocx2obsidian/blob/main/LICENSE"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="footer-link"
-              >
-                MIT License
+                Issues
               </a>
             </li>
           </ul>
 
           <span className="footer-disclaimer">
-            Unofficial tool. Not affiliated with Samsung Electronics or Obsidian.
+            MIT License · Unofficial tool unaffiliated with Samsung Electronics or Obsidian.
           </span>
         </div>
       </div>

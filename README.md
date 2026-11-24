@@ -61,33 +61,46 @@ pip install -e ".[cli,dev]"
 
 ## Web Converter (In-Browser)
 
-In addition to the CLI, `sdocx2obsidian` provides a completely browser-based web converter located in the `site/` folder. It converts `.sdocx` archives into Obsidian vaults using Pyodide (Python WebAssembly) directly inside the client's web browser, without any server-side processing.
+In addition to the CLI, `sdocx2obsidian` provides a completely browser-based web application located in the `site/` folder. It converts `.sdocx` archives into Obsidian vaults using Pyodide (Python WebAssembly in a Web Worker) directly inside your web browser.
 
-### Privacy Statement
-> The page converts notes entirely in the browser; files are never uploaded; nothing is stored; closing or refreshing the tab discards everything; the code is open source.
+- **Live Web App:** [https://sdocx2obsidian.workers.dev](https://sdocx2obsidian.workers.dev)
 
-### Web Limits & Safety
-- **Per-file limit:** 50 MB max per note archive.
-- **Session total:** 100 MB total uncompressed session limit.
-- **Batch size:** Up to 5 files per session.
-- **Mobile advisory:** Converting notes with high-resolution photos or audio recordings demands substantial browser memory. If memory pressure causes tab reloads or pauses on mobile devices, continue the conversion on a laptop or desktop computer.
+### Privacy & Architecture
+> **Zero Uploads:** All conversion, decompression, and Markdown assembly run 100% inside your browser using client-side WebAssembly. Notes, photos, and voice memos are never uploaded to any remote server or cloud API.
 
-### Running the Web Interface
-The web frontend is a React + TypeScript application located in the `site/` folder. The Pyodide runtime (v0.26.4) and the `sdocx2obsidian` Python wheel are pinned and vendored locally in `site/vendor/`, requiring no external CDN dependencies or backend servers.
+### Web Limits & Safety Bounds
+- **Single file limit:** 50 MB max per note archive.
+- **Session total:** 100 MB total uncompressed session budget.
+- **Batch size:** Up to 5 notes per session.
+- **Mobile advisory:** Notes $\ge 25\text{ MB}$ demand significant memory; run on desktop if mobile devices experience memory pressure.
 
-To run the local development server:
+### Local Development & Prerender Build
+The frontend is built with React 18, TypeScript, and Vite. Static routes are prerendered at build time for optimal SEO.
+
 ```bash
 cd site
+
+# Install dependencies
 pnpm install
-pnpm run dev
-```
 
-To build and preview the production static SPA:
-```bash
-cd site
+# Run local development server (http://localhost:5173)
+pnpm run dev
+
+# Run unit tests
+pnpm test
+
+# Build production bundle and prerender static routes (site/dist)
 pnpm run build
+
+# Preview production build locally
 pnpm run preview
 ```
+
+### Deploying to Cloudflare (Workers / Pages)
+The build output in `site/dist/` is ready for static deployment to Cloudflare Pages or Cloudflare Workers:
+- **Build command:** `pnpm run build`
+- **Output directory:** `site/dist`
+- **Security headers:** Built-in `site/public/_headers` enforces strict CSP, MIME types, and immutable caching for vendor assets.
 
 ---
 

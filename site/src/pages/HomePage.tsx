@@ -10,6 +10,7 @@ interface HomePageProps {
   currentIndex: number;
   statusText: string;
   outcome: SessionOutcome | null;
+  hasSampleFile?: boolean;
   onFilesSelected: (files: FileList | File[]) => void;
   onRemoveFile: (id: string) => void;
   onAddMoreFiles: (files: FileList | File[]) => void;

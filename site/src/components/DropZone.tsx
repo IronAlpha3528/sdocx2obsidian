@@ -3,9 +3,14 @@ import React, { useState, useRef } from "react";
 interface DropZoneProps {
   onFilesSelected: (files: FileList | File[]) => void;
   error?: string;
+  hasSampleFile?: boolean;
 }
 
-export const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, error }) => {
+export const DropZone: React.FC<DropZoneProps> = ({
+  onFilesSelected,
+  error,
+  hasSampleFile,
+}) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +85,20 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesSelected, error }) =>
         <div className="dropzone-limits">
           Max 5 notes per batch · 50 MB per file · 100 MB session limit · .sdocx only
         </div>
+
+        {hasSampleFile && (
+          <div style={{ marginTop: "12px" }}>
+            <a
+              href="/sample.sdocx"
+              download="sample.sdocx"
+              className="btn-ghost"
+              style={{ fontSize: "0.775rem", padding: "2px 8px", textDecoration: "underline" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              Download sample file (.sdocx)
+            </a>
+          </div>
+        )}
       </div>
 
       {error && (

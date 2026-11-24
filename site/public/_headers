@@ -1,0 +1,36 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self' ws: https://cloudflareinsights.com; img-src 'self' data:; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/vendor/pyodide/*.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=31536000, immutable
+
+/vendor/pyodide/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/vendor/*.whl
+  Content-Type: application/octet-stream
+  Cache-Control: public, max-age=31536000, immutable
+
+/site.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=86400
+
+/favicon.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=86400
+
+/robots.txt
+  Content-Type: text/plain
+  Cache-Control: public, max-age=86400
+
+/sitemap.xml
+  Content-Type: application/xml
+  Cache-Control: public, max-age=86400
