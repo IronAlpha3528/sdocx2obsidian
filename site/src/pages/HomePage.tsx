@@ -2,10 +2,6 @@ import React, { useEffect } from "react";
 import { AppState, StagedFile, SessionOutcome } from "../types";
 import { Hero } from "../components/Hero";
 import { ConverterWorkspace } from "../components/ConverterWorkspace";
-import { HowItWorks } from "../components/HowItWorks";
-import { PreviewShowcase } from "../components/PreviewShowcase";
-import { Features } from "../components/Features";
-import { Limitations } from "../components/Limitations";
 
 interface HomePageProps {
   state: AppState;
@@ -35,10 +31,6 @@ export const HomePage: React.FC<HomePageProps> = (props) => {
     <div className="content-container">
       <Hero />
       <ConverterWorkspace {...props} />
-      <HowItWorks />
-      <PreviewShowcase />
-      <Features />
-      <Limitations />
     </div>
   );
 };
