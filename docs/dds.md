@@ -69,7 +69,7 @@ The maintainer has approved incorporating the following amendments into the desi
 | D-16 | Browser-first deployment as a second product mode | Option B: client-side WebAssembly execution via Pyodide in a Web Worker; zero server compute, maximum user privacy |
 | D-17 | Plain-text preview in the web UI | Set via textContent assignment only; no HTML/Markdown parsing or media rendering of note content |
 | D-18 | Limits profile injected at construction | An immutable profile (`LimitsProfile`) passed to extractor and parser; CLI keeps desktop defaults, web adapter injects `WEB_LIMITS` |
-| D-19 | No server component in this release | Option A (FastAPI, Docker, server-side APIs) is formally deferred; hosting is 100% static on Vercel |
+| D-19 | No server component in this release | Option A (FastAPI, Docker, server-side APIs) is formally deferred; hosting is 100% static via Cloudflare Workers Static Assets (`site/wrangler.jsonc`) |
 
 ---
 

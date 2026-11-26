@@ -216,7 +216,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 ## Web Deployment Phases (P13 – P17)
 Authority: `docs/web-implementation-brief.md`.
 
-*Deferred, Option A only:* Containerized server deployments (FastAPI, Docker, Railway, CORS middleware, server-side rate limiting) are formally deferred and out of scope. The web deployment executes 100% in the user's browser via Pyodide WebAssembly hosted statically on Vercel.
+*Deferred, Option A only:* Containerized server deployments (FastAPI, Docker, Railway, CORS middleware, server-side rate limiting) are formally deferred and out of scope. The web deployment executes 100% in the user's browser via Pyodide WebAssembly hosted statically on Cloudflare Workers (`site/wrangler.jsonc`).
 
 ## P13 — Pyodide feasibility spike
 **Goal:** prove or disprove that the existing package runs in the WebAssembly Python runtime.
@@ -265,7 +265,7 @@ Authority: `docs/frontend-redesign-brief.md`.
 ## P17 — Hosting, documentation, acceptance
 **Goal:** live static deployment and complete documentation.
 **Deliverables:**
-- Vercel static hosting configuration (`vercel.json` with security headers, long-lived caching).
+- Cloudflare Workers static hosting configuration (`site/wrangler.jsonc` and `site/public/_headers` with security headers, MIME types, and long-lived caching).
 - Privacy verification network trace (zero third-party requests; zero data leaves browser).
 - README updates (web tool section, privacy statement, install instructions with extra).
 - Maintainer acceptance checklist and emergency shutoff procedure.

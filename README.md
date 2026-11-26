@@ -63,7 +63,7 @@ pip install -e ".[cli,dev]"
 
 In addition to the CLI, `sdocx2obsidian` provides a completely browser-based web application located in the `site/` folder. It converts `.sdocx` archives into Obsidian vaults using Pyodide (Python WebAssembly in a Web Worker) directly inside your web browser.
 
-- **Live Web App:** [https://sdocx2obsidian.workers.dev](https://sdocx2obsidian.workers.dev)
+- **Live Web App:** [https://sdocx2obsidian.abhay-gugale153.workers.dev/](https://sdocx2obsidian.abhay-gugale153.workers.dev/)
 
 ### Privacy & Architecture
 > **Zero Uploads:** All conversion, decompression, and Markdown assembly run 100% inside your browser using client-side WebAssembly. Notes, photos, and voice memos are never uploaded to any remote server or cloud API.
@@ -96,10 +96,11 @@ pnpm run build
 pnpm run preview
 ```
 
-### Deploying to Cloudflare (Workers / Pages)
-The build output in `site/dist/` is ready for static deployment to Cloudflare Pages or Cloudflare Workers:
+### Deploying to Cloudflare Workers
+The build output in `site/dist/` is deployed as static assets via `site/wrangler.jsonc`:
+- **Root directory:** `site`
 - **Build command:** `pnpm run build`
-- **Output directory:** `site/dist`
+- **Deploy command:** `npx wrangler deploy`
 - **Security headers:** Built-in `site/public/_headers` enforces strict CSP, MIME types, and immutable caching for vendor assets.
 
 ---
@@ -187,8 +188,8 @@ ruff check src tests
 # 4. Architectural layer and boundary checker
 python scripts/check.py
 
-# 5. Frontend test suite (state machine, preview, issue links, node integration)
-cd site && npm run check
+# 5. Frontend test suite (Cloudflare config, SEO, prerender output, validation, preview, issue links, Pyodide integration)
+cd site && pnpm test
 ```
 
 ---
