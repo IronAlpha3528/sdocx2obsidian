@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildIssueLink, getCoarseSizeBucket } from "../js/issue_link.js";
+import { buildIssueLink, getCoarseSizeBucket } from "../src/utils/issueLink.ts";
 
 test("getCoarseSizeBucket buckets file sizes appropriately", () => {
   assert.equal(getCoarseSizeBucket(500 * 1024), "< 1 MB");

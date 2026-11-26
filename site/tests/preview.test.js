@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatPlainTextPreview } from "../js/preview.js";
+import { formatPlainTextPreview } from "../src/utils/preview.ts";
 
 test("formatPlainTextPreview handles plain text cleanly", () => {
   const input = "# Hello World\n\nThis is a note.";

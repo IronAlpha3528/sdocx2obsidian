@@ -13,7 +13,6 @@ interface ConverterWorkspaceProps {
   currentIndex: number;
   statusText: string;
   outcome: SessionOutcome | null;
-  hasSampleFile?: boolean;
   onFilesSelected: (files: FileList | File[]) => void;
   onRemoveFile: (id: string) => void;
   onAddMoreFiles: (files: FileList | File[]) => void;
@@ -33,7 +32,6 @@ export const ConverterWorkspace: React.FC<ConverterWorkspaceProps> = ({
   currentIndex,
   statusText,
   outcome,
-  hasSampleFile,
   onFilesSelected,
   onRemoveFile,
   onAddMoreFiles,
@@ -64,7 +62,6 @@ export const ConverterWorkspace: React.FC<ConverterWorkspaceProps> = ({
             <DropZone
               onFilesSelected={onFilesSelected}
               error={validationError}
-              hasSampleFile={hasSampleFile}
             />
           )}
 

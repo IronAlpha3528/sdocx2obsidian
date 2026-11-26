@@ -720,12 +720,6 @@ main {
    Showcase Panels (Bugfixed, top-aligned, clean Obsidian syntax)
    ========================================================================== */
 
-.showcase-section {
-  margin-top: 48px;
-  padding-top: 36px;
-  border-top: 1px solid var(--border-subtle);
-}
-
 .showcase-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

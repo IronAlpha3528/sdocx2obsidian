@@ -1,10 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 
 export const FeaturesPage: React.FC = () => {
-  useEffect(() => {
-    document.title = "Features & Architecture — sdocx2obsidian";
-  }, []);
 
   const features = [
     {

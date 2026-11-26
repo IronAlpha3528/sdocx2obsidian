@@ -1,10 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 
 export const AboutPage: React.FC = () => {
-  useEffect(() => {
-    document.title = "About — sdocx2obsidian";
-  }, []);
 
   const version = "0.1.0";
 

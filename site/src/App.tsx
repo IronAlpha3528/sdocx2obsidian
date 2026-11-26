@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { AppState, StagedFile, SessionOutcome } from "./types";
+import { SITE_URL, getRouteMeta } from "./seo-config";
 import { validateFiles } from "./utils/validation";
 import { useTheme } from "./hooks/useTheme";
 import { useConversionWorker } from "./hooks/useConversionWorker";
@@ -19,6 +20,7 @@ import { AboutPage } from "./pages/AboutPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
 export const App: React.FC = () => {
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const worker = useConversionWorker();
 
@@ -29,7 +31,6 @@ export const App: React.FC = () => {
   const [statusText, setStatusText] = useState("");
   const [outcome, setOutcome] = useState<SessionOutcome | null>(null);
   const [announcement, setAnnouncement] = useState("");
-  const [hasSampleFile, setHasSampleFile] = useState(false);
   const [isUnsupportedBrowser, setIsUnsupportedBrowser] = useState(false);
 
   const isAbortedRef = useRef(false);
@@ -38,18 +39,15 @@ export const App: React.FC = () => {
     setAnnouncement(msg);
   }, []);
 
+  useEffect(() => {
+    document.title = getRouteMeta(location.pathname).title;
+  }, [location.pathname]);
+
   // Environment checks on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const unsupported = !window.WebAssembly || typeof Worker === "undefined";
       setIsUnsupportedBrowser(unsupported);
-
-      // Check if sample.sdocx exists in public directory
-      fetch("/sample.sdocx", { method: "HEAD" })
-        .then((res) => {
-          if (res.ok) setHasSampleFile(true);
-        })
-        .catch(() => {});
 
       // Optional Cloudflare Web Analytics beacon
       const cfToken = import.meta.env.VITE_CF_ANALYTICS_TOKEN;
@@ -142,7 +140,7 @@ export const App: React.FC = () => {
           const buf = await current.file.arrayBuffer();
           const result = await worker.convertNote(current.name, buf);
 
-          if (result.status === "error") {
+          if (result.status === "failed") {
             current.status = "failed";
             let rawMsg = result.message || "Failed to parse note";
             const lowerMsg = rawMsg.toLowerCase();
@@ -250,7 +248,7 @@ export const App: React.FC = () => {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "sdocx2obsidian",
-    url: "https://sdocx2obsidian.pages.dev",
+    url: `${SITE_URL}/`,
     description: "Convert Samsung Notes (.sdocx) to Obsidian Markdown vaults with Wikilink embeds and local in-browser WebAssembly processing.",
     applicationCategory: "UtilityApplication",
     operatingSystem: "All modern web browsers",
@@ -308,7 +306,6 @@ export const App: React.FC = () => {
                   currentIndex={currentIndex}
                   statusText={statusText}
                   outcome={outcome}
-                  hasSampleFile={hasSampleFile}
                   onFilesSelected={handleFilesSelected}
                   onRemoveFile={handleRemoveFile}
                   onAddMoreFiles={handleAddMoreFiles}

@@ -1,10 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 
 export const NotFoundPage: React.FC = () => {
-  useEffect(() => {
-    document.title = "404 Not Found — sdocx2obsidian";
-  }, []);
 
   return (
     <div className="subpage-container" style={{ padding: "80px 20px", textAlign: "center" }}>

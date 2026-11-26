@@ -64,3 +64,41 @@ test("node integration: pyodide and wheel convert note in-memory", async () => {
   assert.equal(outcome.succeeded, 1);
   assert(outcome.zip_size > 0);
 });
+
+test("node integration: corrupt note returns failed status with error_code", async () => {
+  const pyodideMjsUrl = pathToFileURL(path.resolve(pyodideDir, "pyodide.mjs")).href;
+  const pyodideModule = await import(pyodideMjsUrl);
+  const pyodide = await pyodideModule.loadPyodide({
+    packageCacheDir: pyodideDir,
+  });
+
+  const wheelBytes = fs.readFileSync(wheelPath);
+  pyodide.FS.writeFile("/sdocx2obsidian.whl", wheelBytes);
+
+  const resultJson = await pyodide.runPythonAsync(`
+    import json
+    import zipfile
+    with zipfile.ZipFile("/sdocx2obsidian.whl", "r") as zf:
+        zf.extractall("/lib/python3.12/site-packages")
+    from sdocx2obsidian.web.adapter import ConversionSession
+
+    session = ConversionSession()
+    res = session.convert_note("Broken.sdocx", b"not a zip")
+    _, outcome = session.finish()
+
+    json.dumps({
+        "status": res.status,
+        "error_code": res.error_code,
+        "message": res.message,
+        "total": outcome.total,
+        "failed": outcome.failed,
+    })
+  `);
+
+  const outcome = JSON.parse(resultJson);
+  assert.equal(outcome.status, "failed");
+  assert.equal(outcome.error_code, "CORRUPT_ARCHIVE");
+  assert.ok(outcome.message.length > 0);
+  assert.equal(outcome.total, 1);
+  assert.equal(outcome.failed, 1);
+});

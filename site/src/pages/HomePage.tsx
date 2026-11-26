@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { AppState, StagedFile, SessionOutcome } from "../types";
 import { Hero } from "../components/Hero";
 import { ConverterWorkspace } from "../components/ConverterWorkspace";
@@ -10,7 +10,6 @@ interface HomePageProps {
   currentIndex: number;
   statusText: string;
   outcome: SessionOutcome | null;
-  hasSampleFile?: boolean;
   onFilesSelected: (files: FileList | File[]) => void;
   onRemoveFile: (id: string) => void;
   onAddMoreFiles: (files: FileList | File[]) => void;
@@ -24,10 +23,6 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = (props) => {
-  useEffect(() => {
-    document.title = "sdocx2obsidian — Convert Samsung Notes to Obsidian Markdown";
-  }, []);
-
   return (
     <div className="content-container">
       <Hero />

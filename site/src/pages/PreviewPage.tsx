@@ -1,11 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 export const PreviewPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"media" | "text">("media");
-
-  useEffect(() => {
-    document.title = "Vault Preview & Syntax — sdocx2obsidian";
-  }, []);
 
   return (
     <div className="subpage-container">

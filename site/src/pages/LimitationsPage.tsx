@@ -1,10 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 
 export const LimitationsPage: React.FC = () => {
-  useEffect(() => {
-    document.title = "Supported Features & Limitations — sdocx2obsidian";
-  }, []);
 
   const matrix: Array<{
     feature: string;

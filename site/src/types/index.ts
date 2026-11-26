@@ -5,7 +5,6 @@ export type AppState =
   | "loading_runtime"
   | "converting"
   | "done"
-  | "cancelled"
   | "error";
 
 export type FileConversionStatus =
@@ -40,7 +39,7 @@ export interface SessionOutcome {
 export type ThemeMode = "dark" | "light";
 
 export interface NoteResultPayload {
-  status: "success" | "warning" | "error";
+  status: "success" | "failed";
   filename: string;
   conversion_id: string;
   markdown_name: string;
