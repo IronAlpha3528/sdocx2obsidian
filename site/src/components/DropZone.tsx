@@ -80,6 +80,18 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
         <div className="dropzone-title">Drop .sdocx notes here, or click to browse</div>
         <p className="dropzone-subtext">Select files directly from your computer or phone</p>
+        <div className="dropzone-cta">
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+          >
+            Select .sdocx files
+          </button>
+        </div>
         <div className="dropzone-limits">
           Max 5 notes per batch · 50 MB per file · 100 MB session limit · .sdocx only
         </div>

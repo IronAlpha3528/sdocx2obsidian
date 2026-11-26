@@ -29,6 +29,7 @@ test("public/_headers enforces CSP, security headers, MIME types, and caching", 
   assert.ok(raw.includes("default-src 'none'"));
   assert.ok(raw.includes("script-src 'self' 'wasm-unsafe-eval'"));
   assert.ok(raw.includes("worker-src 'self' blob:"));
+  assert.ok(raw.includes("manifest-src 'self'"));
   assert.ok(raw.includes("Content-Type: application/wasm"));
   assert.ok(raw.includes("Content-Type: application/octet-stream"));
   assert.ok(raw.includes("Cache-Control: public, max-age=31536000, immutable"));

@@ -24,9 +24,11 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = (props) => {
   return (
-    <div className="content-container">
-      <Hero />
-      <ConverterWorkspace {...props} />
+    <div className="hero-band">
+      <div className="content-container">
+        <Hero />
+        <ConverterWorkspace {...props} />
+      </div>
     </div>
   );
 };

@@ -29,6 +29,8 @@ test("prerendered dist output matches all routes in site-meta.json", () => {
     assert.ok(html.includes(`<title>${route.title}</title>`), `Title mismatch for ${route.path}`);
     assert.ok(html.includes(`<h1`), `Missing <h1> on ${route.path}`);
     assert.ok(!html.includes("pages.dev"), `Stale pages.dev URL found in ${route.path}`);
+    assert.ok(!html.includes("fonts.googleapis.com"), `External font stylesheet found in ${route.path}`);
+    assert.ok(!html.includes("fonts.gstatic.com"), `External font host found in ${route.path}`);
 
     const expectedCanonical = `${siteMeta.siteUrl}${route.path === "/" ? "" : route.path}`;
     assert.ok(
@@ -36,6 +38,17 @@ test("prerendered dist output matches all routes in site-meta.json", () => {
       `Canonical mismatch for ${route.path}`
     );
   }
+
+  const assetsDir = path.join(distDir, "assets");
+  const assetFiles = fs.readdirSync(assetsDir);
+  assert.ok(
+    assetFiles.some((f) => f.includes("inter") && f.endsWith(".woff2")),
+    "Bundled self-hosted Inter .woff2 font must exist in dist/assets"
+  );
+  assert.ok(
+    assetFiles.some((f) => f.includes("source-serif-4") && f.endsWith(".woff2")),
+    "Bundled self-hosted Source Serif 4 .woff2 font must exist in dist/assets"
+  );
 
   const sitemap = fs.readFileSync(path.join(distDir, "sitemap.xml"), "utf-8");
   const robots = fs.readFileSync(path.join(distDir, "robots.txt"), "utf-8");

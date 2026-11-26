@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { ThemeMode } from "../types";
 
@@ -10,12 +10,63 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme }) => {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   return (
     <header className="site-navbar" aria-label="Main Navigation">
       <div className="navbar-inner">
         <Link to="/" className="brand-wordmark" aria-label="sdocx2obsidian homepage">
-          sdocx2obsidian
+          <svg
+            className="brand-logo"
+            width="28"
+            height="28"
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="navTileBg" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#2b313d" />
+                <stop offset="100%" stopColor="#171b22" />
+              </linearGradient>
+              <linearGradient id="navSheetBg" x1="8" y1="6" x2="23" y2="26" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#2b3341" />
+                <stop offset="100%" stopColor="#1e242f" />
+              </linearGradient>
+              <linearGradient id="navFoldBlue" x1="18.5" y1="6" x2="23.5" y2="11" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#60a5fa" />
+                <stop offset="100%" stopColor="#2563eb" />
+              </linearGradient>
+              <linearGradient id="navGemHighlight" x1="14" y1="12" x2="18" y2="22" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#ddd6fe" />
+                <stop offset="55%" stopColor="#a882ff" />
+                <stop offset="100%" stopColor="#7c3aed" />
+              </linearGradient>
+              <linearGradient id="navGemShadow" x1="12" y1="14" x2="17" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#7c3aed" />
+                <stop offset="100%" stopColor="#4c1d95" />
+              </linearGradient>
+            </defs>
+            <rect x="1.5" y="1.5" width="29" height="29" rx="7" fill="url(#navTileBg)" stroke="#3b4354" strokeWidth="1" />
+            <path
+              d="M9.5 6.5H18.5L23.2 11.2V24.2C23.2 24.92 22.62 25.5 21.9 25.5H9.5C8.78 25.5 8.2 24.92 8.2 24.2V7.8C8.2 7.08 8.78 6.5 9.5 6.5Z"
+              fill="url(#navSheetBg)"
+              stroke="#475569"
+              strokeWidth="0.9"
+            />
+            <path d="M18.5 6.5V10.1C18.5 10.71 18.99 11.2 19.6 11.2H23.2L18.5 6.5Z" fill="url(#navFoldBlue)" />
+            <polygon points="16.5,11.6 13.3,14.2 14.5,17.2 16.5,14.6" fill="#c4b5fd" />
+            <polygon points="16.5,11.6 16.5,14.6 19.4,15.3 18.7,12.5" fill="#e9d5ff" />
+            <polygon points="13.3,14.2 11.8,18.2 13.7,22.2 14.5,17.2" fill="url(#navGemShadow)" />
+            <polygon points="16.5,14.6 14.5,17.2 16.9,22.8 19.4,15.3" fill="url(#navGemHighlight)" />
+            <polygon points="14.5,17.2 13.7,22.2 16.9,22.8" fill="#5b21b6" />
+            <polygon points="19.4,15.3 16.9,22.8 18.9,19.4" fill="#8b5cf6" />
+          </svg>
+          <span>sdocx2obsidian</span>
         </Link>
 
         <nav aria-label="Site Links">
@@ -57,7 +108,11 @@ export const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme }) => {
 
         <div className="navbar-actions">
           {!isHome && (
-            <Link to="/" className="btn-secondary" style={{ padding: "4px 10px", fontSize: "0.8rem" }}>
+            <Link
+              to="/"
+              className="btn-secondary navbar-converter-link"
+              style={{ padding: "4px 10px", fontSize: "0.8rem" }}
+            >
               Converter
             </Link>
           )}
@@ -100,8 +155,51 @@ export const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme }) => {
               </svg>
             )}
           </button>
+
+          <button
+            type="button"
+            className="icon-button mobile-nav-toggle"
+            onClick={() => setMobileOpen((prev) => !prev)}
+            aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="17" x2="20" y2="17" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+
+      {mobileOpen && (
+        <nav className="mobile-nav-menu" aria-label="Mobile Navigation">
+          {!isHome && (
+            <NavLink to="/" end className={({ isActive }) => `mobile-nav-link ${isActive ? "active" : ""}`}>
+              Converter
+            </NavLink>
+          )}
+          <NavLink to="/features" className={({ isActive }) => `mobile-nav-link ${isActive ? "active" : ""}`}>
+            Features
+          </NavLink>
+          <NavLink to="/how-it-works" className={({ isActive }) => `mobile-nav-link ${isActive ? "active" : ""}`}>
+            How It Works
+          </NavLink>
+          <NavLink to="/preview" className={({ isActive }) => `mobile-nav-link ${isActive ? "active" : ""}`}>
+            Preview
+          </NavLink>
+          <NavLink to="/limitations" className={({ isActive }) => `mobile-nav-link ${isActive ? "active" : ""}`}>
+            Limitations
+          </NavLink>
+        </nav>
+      )}
     </header>
   );
 };

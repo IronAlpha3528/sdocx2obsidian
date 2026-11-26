@@ -99,8 +99,11 @@ async function main() {
     // Inject SEO tags right before </head>
     html = html.replace("</head>", `${seoTags}\n</head>`);
 
-    // Inject prerendered App HTML into root
-    html = html.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
+    // Inject prerendered App HTML into root with its rendered route path
+    html = html.replace(
+      '<div id="root"></div>',
+      `<div id="root" data-prerender-path="${route.path}">${appHtml}</div>`
+    );
 
     // Write out target HTML file
     let outFilePath;
