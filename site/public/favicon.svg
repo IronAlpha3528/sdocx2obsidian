@@ -1,7 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-  <polyline points="14 2 14 8 20 8"/>
-  <line x1="16" y1="13" x2="8" y2="13"/>
-  <line x1="16" y1="17" x2="8" y2="17"/>
-  <polyline points="10 9 9 9 8 9"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="tileBg" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2b313d"/>
+      <stop offset="100%" stop-color="#171b22"/>
+    </linearGradient>
+    <linearGradient id="sheetBg" x1="8" y1="6" x2="23" y2="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2b3341"/>
+      <stop offset="100%" stop-color="#1e242f"/>
+    </linearGradient>
+    <linearGradient id="foldBlue" x1="18.5" y1="6" x2="23.5" y2="11" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="gemHighlight" x1="14" y1="12" x2="18" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ddd6fe"/>
+      <stop offset="55%" stop-color="#a882ff"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="gemShadow" x1="12" y1="14" x2="17" y2="23" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="7" fill="url(#tileBg)" stroke="#3b4354" stroke-width="1"/>
+  <path d="M9.5 6.5H18.5L23.2 11.2V24.2C23.2 24.92 22.62 25.5 21.9 25.5H9.5C8.78 25.5 8.2 24.92 8.2 24.2V7.8C8.2 7.08 8.78 6.5 9.5 6.5Z" fill="url(#sheetBg)" stroke="#475569" stroke-width="0.9"/>
+  <path d="M18.5 6.5V10.1C18.5 10.71 18.99 11.2 19.6 11.2H23.2L18.5 6.5Z" fill="url(#foldBlue)"/>
+  <!-- Asymmetric faceted Obsidian-inspired crystal -->
+  <polygon points="16.5,11.6 13.3,14.2 14.5,17.2 16.5,14.6" fill="#c4b5fd"/>
+  <polygon points="16.5,11.6 16.5,14.6 19.4,15.3 18.7,12.5" fill="#e9d5ff"/>
+  <polygon points="13.3,14.2 11.8,18.2 13.7,22.2 14.5,17.2" fill="url(#gemShadow)"/>
+  <polygon points="16.5,14.6 14.5,17.2 16.9,22.8 19.4,15.3" fill="url(#gemHighlight)"/>
+  <polygon points="14.5,17.2 13.7,22.2 16.9,22.8" fill="#5b21b6"/>
+  <polygon points="19.4,15.3 16.9,22.8 18.9,19.4" fill="#8b5cf6"/>
 </svg>

@@ -10,13 +10,13 @@ if (!fs.existsSync(publicDir)) {
   fs.mkdirSync(publicDir, { recursive: true });
 }
 
-// 1. Helper to generate valid PNG buffers
+// 1. Helper to generate valid RGBA PNG buffers
 function createPng(width, height, getPixel) {
   const crcTable = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
     let c = n;
     for (let k = 0; k < 8; k++) {
-      c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     }
     crcTable[n] = c >>> 0;
   }
@@ -41,8 +41,8 @@ function createPng(width, height, getPixel) {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // RGBA color type
+  ihdr[8] = 8;
+  ihdr[9] = 6;
   ihdr[10] = 0;
   ihdr[11] = 0;
   ihdr[12] = 0;
@@ -50,7 +50,7 @@ function createPng(width, height, getPixel) {
   const raw = Buffer.alloc(height * (1 + width * 4));
   let offset = 0;
   for (let y = 0; y < height; y++) {
-    raw[offset++] = 0; // filter None
+    raw[offset++] = 0;
     for (let x = 0; x < width; x++) {
       const [r, g, b, a] = getPixel(x, y);
       raw[offset++] = r;
@@ -69,142 +69,239 @@ function createPng(width, height, getPixel) {
   ]);
 }
 
-// 2. Favicon SVG
-const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-  <polyline points="14 2 14 8 20 8"/>
-  <line x1="16" y1="13" x2="8" y2="13"/>
-  <line x1="16" y1="17" x2="8" y2="17"/>
-  <polyline points="10 9 9 9 8 9"/>
-</svg>`;
+// Geometry helpers for anti-aliased rendering (in 32x32 normalized coordinate space)
+function sdRoundedBox(px, py, cx, cy, hw, hh, r) {
+  const qx = Math.abs(px - cx) - hw + r;
+  const qy = Math.abs(py - cy) - hh + r;
+  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
+}
+
+function pointInPoly(px, py, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i];
+    const [xj, yj] = pts[j];
+    const intersect = yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function distToSegment(px, py, ax, ay, bx, by) {
+  const vx = bx - ax;
+  const vy = by - ay;
+  const lenSq = vx * vx + vy * vy;
+  const t = lenSq === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / lenSq));
+  return Math.hypot(px - (ax + t * vx), py - (ay + t * vy));
+}
+
+function blend(bg, fg, alpha) {
+  const a = Math.max(0, Math.min(1, alpha));
+  return [
+    bg[0] + (fg[0] - bg[0]) * a,
+    bg[1] + (fg[1] - bg[1]) * a,
+    bg[2] + (fg[2] - bg[2]) * a,
+  ];
+}
+
+// Emblem polygons in 32x32 design space: folded Samsung Note sheet + faceted Obsidian crystal
+const NOTE_OUTLINE = [
+  [7.5, 6.0],
+  [18.8, 6.0],
+  [24.5, 11.7],
+  [24.5, 25.5],
+  [7.5, 25.5],
+];
+const NOTE_FOLD_FLAP = [
+  [18.8, 6.0],
+  [24.5, 11.7],
+  [18.8, 11.7],
+];
+const CRYSTAL_LEFT = [
+  [15.4, 12.1],
+  [10.9, 16.9],
+  [12.9, 23.0],
+  [15.4, 23.8],
+];
+const CRYSTAL_RIGHT = [
+  [15.4, 12.1],
+  [20.1, 16.6],
+  [18.1, 23.0],
+  [15.4, 23.8],
+];
+const CRYSTAL_TOP = [
+  [15.4, 12.1],
+  [10.9, 16.9],
+  [15.4, 18.2],
+  [20.1, 16.6],
+];
+
+function sampleEmblem(u, v, outerBg = [13, 17, 23]) {
+  let col = outerBg;
+
+  // Outer tile gradient (#1c2331 -> #10151e) with border (#30394a)
+  const tileD = sdRoundedBox(u, v, 16, 16, 15, 15, 7);
+  if (tileD <= 0) {
+    const t = Math.max(0, Math.min(1, (u + v) / 64));
+    col = [28 - t * 12, 35 - t * 14, 49 - t * 19];
+    if (tileD > -1.05) {
+      col = [48, 57, 74];
+    }
+  } else {
+    return [col[0], col[1], col[2], 255];
+  }
+
+  // Folded Note Sheet (#18202c fill with #58a6ff border)
+  if (pointInPoly(u, v, NOTE_OUTLINE)) {
+    col = [24, 32, 44];
+    if (pointInPoly(u, v, NOTE_FOLD_FLAP)) {
+      col = [42, 74, 118];
+    }
+  }
+
+  // Note outline stroke (#58a6ff)
+  const noteEdges = [
+    [7.5, 6.0, 18.8, 6.0],
+    [18.8, 6.0, 24.5, 11.7],
+    [24.5, 11.7, 24.5, 25.5],
+    [24.5, 25.5, 7.5, 25.5],
+    [7.5, 25.5, 7.5, 6.0],
+    [18.8, 6.0, 18.8, 11.7],
+    [18.8, 11.7, 24.5, 11.7],
+  ];
+  let minNoteEdge = 99;
+  for (const [ax, ay, bx, by] of noteEdges) {
+    minNoteEdge = Math.min(minNoteEdge, distToSegment(u, v, ax, ay, bx, by));
+  }
+  if (minNoteEdge < 0.72) {
+    col = blend(col, [88, 166, 255], 0.95);
+  }
+
+  // Faceted Obsidian Crystal (#a882ff / #7c3aed / #c4b5fd)
+  const inLeft = pointInPoly(u, v, CRYSTAL_LEFT);
+  const inRight = pointInPoly(u, v, CRYSTAL_RIGHT);
+  const inTop = pointInPoly(u, v, CRYSTAL_TOP);
+  if (inLeft) col = [168, 130, 255]; // #a882ff
+  if (inRight) col = [124, 58, 237]; // #7c3aed
+  if (inTop) col = [196, 181, 253]; // #c4b5fd
+
+  // Crisp crystal ridge highlight clipped strictly inside crystal bounds
+  if (inLeft || inRight || inTop) {
+    const ridgeD = Math.min(
+      distToSegment(u, v, 15.4, 12.1, 15.4, 18.2),
+      distToSegment(u, v, 10.9, 16.9, 15.4, 18.2),
+      distToSegment(u, v, 15.4, 18.2, 20.1, 16.6)
+    );
+    if (ridgeD < 0.25) {
+      col = blend(col, [245, 243, 255], 0.28);
+    }
+  }
+
+  return [col[0], col[1], col[2], 255];
+}
+
+// 2. Favicon SVG (matches exact emblem geometry)
+const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1c2331"/>
+      <stop offset="100%" stop-color="#10151e"/>
+    </linearGradient>
+    <linearGradient id="crystalLeft" x1="11" y1="12" x2="15.5" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#b794ff"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="crystalRight" x1="15.4" y1="12" x2="20" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="url(#bg)" stroke="#30394a" stroke-width="1"/>
+  <path d="M8.5 6H18.8L24.5 11.7V24.5C24.5 25.05 24.05 25.5 23.5 25.5H8.5C7.95 25.5 7.5 25.05 7.5 24.5V7C7.5 6.45 7.95 6 8.5 6Z" fill="#18202c" stroke="#58a6ff" stroke-width="1.35" stroke-linejoin="round"/>
+  <path d="M18.8 6V11.7H24.5L18.8 6Z" fill="#58a6ff" fill-opacity="0.28" stroke="#58a6ff" stroke-width="1.2" stroke-linejoin="round"/>
+  <polygon points="15.4,12.1 10.9,16.9 12.9,23 15.4,23.8" fill="url(#crystalLeft)"/>
+  <polygon points="15.4,12.1 20.1,16.6 18.1,23 15.4,23.8" fill="url(#crystalRight)"/>
+  <polygon points="15.4,12.1 10.9,16.9 15.4,18.2 20.1,16.6" fill="#c4b5fd"/>
+  <path d="M15.4 12.1V18.2M10.9 16.9L15.4 18.2L20.1 16.6" stroke="#f5f3ff" stroke-opacity="0.45" stroke-width="0.6" stroke-linejoin="round"/>
+</svg>
+`;
 fs.writeFileSync(path.join(publicDir, "favicon.svg"), faviconSvg, "utf8");
 
-// 3. Document Icon Pixel Generator
+// 3. Anti-aliased PNG App Icons (4x4 supersampled)
 function generateAppIcon(size) {
+  const ss = 4;
   return createPng(size, size, (x, y) => {
-    // Canvas background: #0f1012
-    const bg = [15, 16, 18, 255];
-    const teal = [20, 184, 166, 255];
-    const tealBg = [18, 40, 38, 255];
-    const white = [230, 232, 235, 255];
-    const border = [36, 39, 46, 255];
-
-    // Margin
-    const m = Math.floor(size * 0.14);
-    const w = size - 2 * m;
-    const h = size - 2 * m;
-
-    if (x >= m && x < m + w && y >= m && y < m + h) {
-      // Inside card
-      const cx = x - m;
-      const cy = y - m;
-
-      // 1px border
-      if (cx === 0 || cx === w - 1 || cy === 0 || cy === h - 1) {
-        return border;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    for (let sy = 0; sy < ss; sy++) {
+      for (let sx = 0; sx < ss; sx++) {
+        const u = ((x + (sx + 0.5) / ss) / size) * 32;
+        const v = ((y + (sy + 0.5) / ss) / size) * 32;
+        const [sr, sg, sb] = sampleEmblem(u, v);
+        r += sr;
+        g += sg;
+        b += sb;
       }
-
-      // Folded corner on top right
-      const fold = Math.floor(w * 0.35);
-      if (cx >= w - fold && cy <= fold) {
-        if (cx - (w - fold) > cy) {
-          return bg; // cut-out corner
-        }
-        if (cx === w - fold || cy === fold || cx - (w - fold) === cy) {
-          return teal; // fold border
-        }
-        return tealBg; // fold flap
-      }
-
-      // Horizontal lines (content representation)
-      const lineY1 = Math.floor(h * 0.48);
-      const lineY2 = Math.floor(h * 0.64);
-      const lineY3 = Math.floor(h * 0.80);
-
-      const lineStart = Math.floor(w * 0.22);
-      const lineEnd1 = Math.floor(w * 0.78);
-      const lineEnd2 = Math.floor(w * 0.65);
-      const lineEnd3 = Math.floor(w * 0.50);
-
-      const thickness = Math.max(1, Math.floor(size * 0.025));
-
-      if (cy >= lineY1 && cy < lineY1 + thickness && cx >= lineStart && cx <= lineEnd1) return teal;
-      if (cy >= lineY2 && cy < lineY2 + thickness && cx >= lineStart && cx <= lineEnd2) return white;
-      if (cy >= lineY3 && cy < lineY3 + thickness && cx >= lineStart && cx <= lineEnd3) return white;
-
-      return [22, 24, 27, 255]; // surface #16181b
     }
-
-    return bg;
+    const samples = ss * ss;
+    return [Math.round(r / samples), Math.round(g / samples), Math.round(b / samples), 255];
   });
 }
 
-// Write icons
 fs.writeFileSync(path.join(publicDir, "apple-touch-icon.png"), generateAppIcon(180));
 fs.writeFileSync(path.join(publicDir, "icon-192.png"), generateAppIcon(192));
 fs.writeFileSync(path.join(publicDir, "icon-512.png"), generateAppIcon(512));
 
-// 4. OG Image (1200 x 630) in site dark/teal theme
+// 4. OG Image (1200 x 630) in dark #0d1117 / #191e26 / #58a6ff + Obsidian purple #a882ff
 const ogImage = createPng(1200, 630, (x, y) => {
-  // Base background #0f1012
-  const bg = [15, 16, 18, 255];
-  const cardBg = [22, 24, 27, 255];
-  const border = [36, 39, 46, 255];
-  const teal = [20, 184, 166, 255];
-  const white = [230, 232, 235, 255];
-  const muted = [107, 114, 128, 255];
+  const bg = [13, 17, 23, 255];
+  const cardBg = [25, 30, 38, 255];
+  const border = [48, 57, 74, 255];
+  const blue = [88, 166, 255, 255];
+  const purple = [168, 130, 255, 255];
+  const white = [240, 244, 248, 255];
+  const muted = [139, 148, 158, 255];
 
-  // Inner card bounds: 80 to 1120 (width 1040), 70 to 560 (height 490)
-  if (x >= 80 && x < 1120 && y >= 70 && y < 560) {
-    const cx = x - 80;
-    const cy = y - 70;
-
-    // Card border
-    if (cx === 0 || cx === 1039 || cy === 0 || cy === 489) {
-      return border;
+  // Subtle dot-grid background outside card
+  const inCard = x >= 80 && x < 1120 && y >= 70 && y < 560;
+  if (!inCard) {
+    if (x % 24 >= 0 && x % 24 <= 1 && y % 24 >= 0 && y % 24 <= 1) {
+      return [34, 41, 54, 255];
     }
-
-    // Top Teal Accent Bar (3px high)
-    if (cy >= 1 && cy <= 4) {
-      return teal;
-    }
-
-    // Document emblem on the left: x: 80..280, y: 120..380
-    if (cx >= 80 && cx <= 260 && cy >= 140 && cy <= 360) {
-      const ex = cx - 80;
-      const ey = cy - 140;
-      const ew = 180;
-      const eh = 220;
-
-      if (ex === 0 || ex === ew - 1 || ey === 0 || ey === eh - 1) return teal;
-      const fold = 55;
-      if (ex >= ew - fold && ey <= fold) {
-        if (ex - (ew - fold) > ey) return cardBg;
-        if (ex === ew - fold || ey === fold || ex - (ew - fold) === ey) return teal;
-      }
-      if (ey >= 90 && ey <= 96 && ex >= 30 && ex <= 150) return teal;
-      if (ey >= 125 && ey <= 129 && ex >= 30 && ex <= 130) return white;
-      if (ey >= 155 && ey <= 159 && ex >= 30 && ex <= 110) return white;
-      return [31, 33, 38, 255];
-    }
-
-    // Graphical title bars and subtitle on right side: cx 320..950
-    // Title bar line 1 (sdocx2obsidian text representation)
-    if (cy >= 160 && cy <= 185 && cx >= 320 && cx <= 780) return teal;
-    // Subtitle representation line
-    if (cy >= 225 && cy <= 245 && cx >= 320 && cx <= 940) return white;
-    if (cy >= 260 && cy <= 276 && cx >= 320 && cx <= 840) return muted;
-
-    // Badge pill representation at bottom right
-    if (cy >= 340 && cy <= 375 && cx >= 320 && cx <= 680) {
-      if (cy === 340 || cy === 374 || cx === 320 || cx === 679) return teal;
-      return [18, 40, 38, 255];
-    }
-
-    return cardBg;
+    return bg;
   }
 
-  return bg;
+  const cx = x - 80;
+  const cy = y - 70;
+
+  if (cx === 0 || cx === 1039 || cy === 0 || cy === 489) {
+    return border;
+  }
+  if (cy >= 1 && cy <= 4) {
+    return cx < 520 ? blue : purple;
+  }
+
+  // Emblem on left: 224x224 centered at (cx=190, cy=245) -> cx: 78..302, cy: 133..357
+  if (cx >= 78 && cx < 302 && cy >= 133 && cy < 357) {
+    const u = ((cx - 78) / 224) * 32;
+    const v = ((cy - 133) / 224) * 32;
+    return sampleEmblem(u, v, cardBg);
+  }
+
+  // Graphical layout bars on right side representing heading, Obsidian purple accent, subtitle, and badge
+  if (cy >= 158 && cy <= 184 && cx >= 348 && cx <= 690) return white;
+  if (cy >= 158 && cy <= 184 && cx >= 708 && cx <= 875) return purple;
+  if (cy >= 224 && cy <= 242 && cx >= 348 && cx <= 935) return muted;
+  if (cy >= 258 && cy <= 274 && cx >= 348 && cx <= 810) return muted;
+
+  // Pill badge at bottom right
+  if (cy >= 334 && cy <= 372 && cx >= 348 && cx <= 690) {
+    if (cy === 334 || cy === 371 || cx === 348 || cx === 689) return blue;
+    return [24, 42, 68, 255];
+  }
+
+  return cardBg;
 });
 fs.writeFileSync(path.join(publicDir, "og-image.png"), ogImage);
 
@@ -215,8 +312,8 @@ const manifest = {
   description: "Convert Samsung Notes (.sdocx) to Obsidian Markdown vaults in your browser.",
   start_url: "/",
   display: "standalone",
-  background_color: "#0f1012",
-  theme_color: "#0f1012",
+  background_color: "#0d1117",
+  theme_color: "#0d1117",
   icons: [
     {
       src: "/icon-192.png",
@@ -237,7 +334,7 @@ const manifest = {
 };
 fs.writeFileSync(
   path.join(publicDir, "site.webmanifest"),
-  JSON.stringify(manifest, null, 2),
+  JSON.stringify(manifest, null, 2) + "\n",
   "utf8"
 );
 

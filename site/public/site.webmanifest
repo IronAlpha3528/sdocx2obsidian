@@ -4,8 +4,8 @@
   "description": "Convert Samsung Notes (.sdocx) to Obsidian Markdown vaults in your browser.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f1012",
-  "theme_color": "#0f1012",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
   "icons": [
     {
       "src": "/icon-192.png",
