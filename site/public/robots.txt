@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sdocx2obsidian.pages.dev/sitemap.xml
+Sitemap: https://sdocx2obsidian.abhay-gugale153.workers.dev/sitemap.xml

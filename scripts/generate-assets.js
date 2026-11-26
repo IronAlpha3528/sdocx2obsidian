@@ -245,7 +245,7 @@ fs.writeFileSync(
 const robotsTxt = `User-agent: *
 Allow: /
 
-Sitemap: https://sdocx2obsidian.pages.dev/sitemap.xml
+Sitemap: https://sdocx2obsidian.abhay-gugale153.workers.dev/sitemap.xml
 `;
 fs.writeFileSync(path.join(publicDir, "robots.txt"), robotsTxt, "utf8");
 
