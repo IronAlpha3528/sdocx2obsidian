@@ -179,9 +179,9 @@ The normative format description used by the code is in `docs/dds.md` (format se
 
 ---
 
-## 4. Unverified / Deferred Items & Scope Exclusions
+## 4. Empirical Verification Status
 
-* **Explicitly Excluded from Scope & Unimplemented Recognition:** Non-image objects including S-Pen ink, vector drawings, shapes, canvas stroke data, `.spi` lasso crops, PDF drawings, and PDF attachments are not currently implemented and are excluded from conversion. They are safely skipped with non-fatal warnings (D-07).
+* **Non-image / unsupported entries:** Unreferenced `.spi` and `.page` entries are verified present in real `.sdocx` archives and are safely skipped with non-fatal warnings (`D-07`). Formal product scope and future extensions are maintained in `docs/srs.md` (§1.3) and `docs/dds.md` (§1.2, §13.3).
 * **Empty body notes:** **VERIFIED** with real sample S3 (`Empty note with title_261111_155038.sdocx`).
 * **Emoji / special characters / ZWJ:** **VERIFIED** with real sample S4 (`Note with emoji between texts_261111_155027.sdocx`).
 * **Object insertion out of chronological order:** Maintained by placeholder ordering rule (O-01).
@@ -190,7 +190,6 @@ The normative format description used by the code is in `docs/dds.md` (format se
 
 ## 5. DDS Impact Summary
 
-* **Scope Exclusions & Non-Image Objects Recorded:** Non-image objects (S-Pen ink, vector drawings, shapes, canvas stroke data, `.spi` files, PDF drawings, and PDF attachments) are explicitly documented as unimplemented and skipped across `docs/srs.md` (§1.3, FR-02), `docs/dds.md` (§1.2, §2 D-07, §6.6), and `docs/format.md`.
 * **Text Locator Rule Refinement:** In `_is_valid_utf16_record`, standard Unicode characters (`ord >= 32` including emojis, `\u200D` ZWJ, and `\uFE0F` variation selectors) are explicitly supported. Control codes (`< 32` except `\n`, `\r`, `\t`, and `127`) are rejected. All 4 real samples now decode cleanly with 100% precision.
 * **Audio Object Signatures (DDS §6.6):** Audio object records use the 5-byte sequence `01 00 02 1F 03` for attached audio and `01 00 02 17 00` for recorded voice memos. Both share the identical payload structure (`u32 media_index`, `u16 title_len`, `UTF-16LE title`, `u16 duration_len`, `UTF-16LE duration`, `u32 tail offset`). The 5-byte signature prevents false-positive collisions with 16-bit integers (e.g. 23 or 799) in image metadata and stroke coordinates. Unpacking is strictly bounds-checked to isolate invalid records cleanly.
 * **`.spi` Clarification:** `.spi` is Samsung's internal S-Pen drawing/page graphic format (not an audio format). When unreferenced by placeholders, it is skipped per D-07 with a warning. When referenced by inline audio objects, the audio files themselves are standard media (`.mp3` or `.m4a`).

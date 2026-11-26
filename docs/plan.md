@@ -201,7 +201,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 - Coverage threshold configured: whole package at least 90 percent, `core/` and `application/` at least 95 percent branch coverage.
 - A short `README.md` with installation, usage, behavior notes (voice recordings first, naming rules, warnings), and known limitations.
 - Clean-environment install check: install the package in a fresh environment and run the command's `--help`.
-**Gate**: all tests pass locally; maintainer runs the tool on a copy of real notes and checks them in Obsidian (links resolve, audio and images display). CI is out of scope until explicitly instructed.
+**Gate**: all tests pass locally; maintainer runs the tool on a copy of real notes and checks them in Obsidian (links resolve, audio and images display). Automated CI is omitted until explicitly instructed.
 
 ## Maintainer acceptance checklist (after P12)
 1. Notes with text only, with images, with attached audio, and with voice recordings convert correctly.
@@ -214,9 +214,7 @@ Authority: `docs/dds.md` (design) and `docs/srs.md` (requirements). This plan se
 ---
 
 ## Web Deployment Phases (P13 – P17)
-Authority: `docs/web-implementation-brief.md`.
-
-*Deferred, Option A only:* Containerized server deployments (FastAPI, Docker, Railway, CORS middleware, server-side rate limiting) are formally deferred and out of scope. The web deployment executes 100% in the user's browser via Pyodide WebAssembly hosted statically on Cloudflare Workers (`site/wrangler.jsonc`).
+Authority: `docs/web-implementation-brief.md` and `docs/dds.md` (§1.2, §13.3). Static browser-only deployment executing 100% via Pyodide WebAssembly on Cloudflare Workers (`site/wrangler.jsonc`).
 
 ## P13 — Pyodide feasibility spike
 **Goal:** prove or disprove that the existing package runs in the WebAssembly Python runtime.

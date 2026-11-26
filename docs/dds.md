@@ -57,10 +57,10 @@ The maintainer has approved incorporating the following amendments into the desi
 | D-04 | Output media name is the entry name without the `<digits>@` prefix, sanitized; duplicates after stripping keep the first name and get an index suffix on later ones | SRS-style stable names, no data loss |
 | D-05 | Audio media not referenced by any inline object are voice recordings, placed at the start, ordered by media index | Matches S1, keeps content, user decision |
 | D-06 | Media referenced by objects without a matching placeholder are appended at the end with a warning; placeholders without a usable object are dropped with a warning | Never lose content silently |
-| D-07 | Media files not classifiable as image or audio (including PDF attachments and .spi drawings), non-image objects (S-Pen ink, vector drawings, shapes, canvas stroke data), and unreferenced images, are not exported; a warning is recorded | Recognition of non-image drawing/stroke/PDF objects is not implemented; SRS scope limits |
+| D-07 | Media files not classifiable as image or audio (including PDF attachments and .spi drawings), non-image objects (S-Pen ink, vector drawings, shapes, canvas stroke data), and unreferenced images, are not exported; a warning is recorded | Unsupported non-media objects cannot be converted; warn instead of failing |
 | D-08 | Processing is strictly sequential | Makes target resolution stateless and simple |
 | D-09 | Note name is the source file stem, sanitized | SRS FR-06 |
-| D-10 | Whole archive content that matters is held in memory (note file and media) with explicit size limits | Simple protocols; large media streaming is a future extension |
+| D-10 | Whole archive content that matters is held in memory (note file and media) with explicit size limits | Simple protocols; memory bounded by extractor limits |
 | D-11 | Per-file failure never aborts the batch; process exit code is 0 when the batch completes, non-zero only for fatal setup errors | SRS AC-4 "exits cleanly"; maintainer to confirm |
 | D-12 | Reporting uses a progress-reporter protocol implemented in the CLI | Lower layers cannot print |
 | D-13 | Text is emitted as plain text without Markdown escaping | SRS FR-02; risk R-06 |
@@ -69,7 +69,7 @@ The maintainer has approved incorporating the following amendments into the desi
 | D-16 | Browser-first deployment as a second product mode | Option B: client-side WebAssembly execution via Pyodide in a Web Worker; zero server compute, maximum user privacy |
 | D-17 | Plain-text preview in the web UI | Set via textContent assignment only; no HTML/Markdown parsing or media rendering of note content |
 | D-18 | Limits profile injected at construction | An immutable profile (`LimitsProfile`) passed to extractor and parser; CLI keeps desktop defaults, web adapter injects `WEB_LIMITS` |
-| D-19 | No server component in this release | Option A (FastAPI, Docker, server-side APIs) is formally deferred; hosting is 100% static via Cloudflare Workers Static Assets (`site/wrangler.jsonc`) |
+| D-19 | Client-side static hosting without a server component | Hosting is 100% static via Cloudflare Workers Static Assets (`site/wrangler.jsonc`) |
 
 ---
 
@@ -285,7 +285,7 @@ ZIP archive, deflate. Entries seen: `note.note`, `end_tag.bin`, `pageIdInfo.dat`
 - Index: zero-based, unique per note; observed in creation order (S1: image 0, attached audio 1, voice 2; S2: image 0, image 1, audio 2).
 - Original name shapes seen: images `files_<yymmdd>_<hhmmss>_<n>.jpg`; attached audio `_<yymmdd>_<hhmmss>_<n>.m4a`; voice `<8 hex>_<hex>.m4a`.
 - Extension `.m4a` does not guarantee a specific codec (AAC and E-AC-3 seen); the tool copies bytes unchanged.
-- `mediaInfo.dat` (VERIFIED, not required by the parser): header of a u32 and a u16 count, then per-media records holding the index, name, and a 64-character hex SHA-256 of the media bytes, ending with the ASCII marker `EOFX`. Record order is not index order. Version 1 does not read it; a future integrity check may.
+- `mediaInfo.dat` (VERIFIED, not required by the parser): header of a u32 and a u16 count, then per-media records holding the index, name, and a 64-character hex SHA-256 of the media bytes, ending with the ASCII marker `EOFX`. Record order is not index order; not read by the parser in this release.
 
 ### 6.3 `note.note` overall layout
 Sections appear in this order (VERIFIED order on S1 and S2):
@@ -561,7 +561,7 @@ Lower layers return data. The service informs the reporter; the CLI formats. War
 Archive content is untrusted: entry names are validated even though entries are never extracted to disk; media output names are sanitized so no path separators exist; size and ratio limits bound memory; the staging area is hidden inside the destination so moves stay on one filesystem; nothing is executed from input.
 
 ### 9.4 Performance and memory
-Files are processed one at a time; peak memory is roughly the note's media size plus one copy during staging writes. Typical notes with long audio are tens of MiB. Streaming of huge media is a documented future extension; the limits in 7.9 protect against abuse.
+Files are processed one at a time; peak memory is roughly the note's media size plus one copy during staging writes. Typical notes with long audio are tens of MiB; the limits in 7.9 protect against abuse.
 
 ### 9.5 Cross-platform
 Paths via `pathlib`; embeds from strings; case-insensitive collision checks; Windows reserved names and illegal characters sanitized; hidden staging directory prefix is a dot; console output avoids platform-specific control sequences beyond what Rich handles.
@@ -670,8 +670,8 @@ Detailed phase instructions, test tables, and gates are in `docs/plan.md` (phase
 | R-02 | Object order may not equal position order in edited notes | Audio offset cross-check; reordered sample (O-01) |
 | R-03 | Unknown object kinds (attachments, drawings, tables) | Dropped with warnings; slots preserved |
 | R-04 | Format differences across Samsung Notes versions | Strict validation and clear errors; collect samples |
-| R-05 | Large media in memory | Limits and documented streaming extension |
-| R-06 | Plain text containing Markdown syntax changes appearance in Obsidian | Accepted per SRS; possible future option |
+| R-05 | Large media in memory | Size/ratio limits in §7.9 (see §13.3 for streaming) |
+| R-06 | Plain text containing Markdown syntax changes appearance in Obsidian | Accepted per D-13 (see §13.3 for escaping) |
 | R-07 | Stripped media names can collide | Deterministic suffix rule (D-04) |
 
 ### 13.2 Open questions for the maintainer (Resolved in P1)
@@ -685,7 +685,24 @@ Detailed phase instructions, test tables, and gates are in `docs/plan.md` (phase
 | O-06 | Update SRS with amendments of 1.3 | **Resolved by maintainer:** All amendments incorporated directly into this DDS without modifying other documentation files. |
 
 ### 13.3 Future extensions (out of scope now)
-PDF attachments and PDF drawings; streaming of large media; reading `mediaInfo.dat` for integrity checks; recursive scanning; optional Markdown escaping; parallel processing (would require target reservation); YAML frontmatter and timestamps.
+- **Samsung Notes Content & Format Support:**
+  - S-Pen ink, vector drawings, shapes, canvas stroke data, `.spi` lasso/page graphics, and `.page` PDF drawings (extraction or rasterization).
+  - Embedded PDF and generic non-image/non-audio document attachments.
+  - Rich-text formatting and structured blocks (bold/italics/colors, headings, checklists, tables) rather than plain-text extraction (`D-13`).
+  - Legacy `.sdoc` / `.snb` format support or migration helpers.
+- **Metadata & Markdown Rendering Options:**
+  - YAML frontmatter, creation/modification timestamps, tags, and Samsung Notes folder hierarchy.
+  - Optional Markdown escaping for literal `*`, `_`, `#`, etc. inside typed body text (`R-06`).
+  - **Multi-app Markdown output formats** beyond Obsidian—specifically parameterizing `MarkdownRenderer` (`core/renderer.py`) and wiring a CLI `--format` / web UI selector for:
+    - **Standard CommonMark / Notion / Typora / VS Code / Joplin:** percent-encoded relative image embeds (`![filename](url_encoded_assets_dir/url_encoded_filename)`), standard links (`[filename](...)`) or `<audio>` tags for audio (`MediaKind.AUDIO`), and optional `# <title>` heading emission from `ParsedNote.title` for Notion ZIP import.
+    - **App-specific layouts & packaging:** shared `assets/` directory / outliner formatting for Logseq, `.textbundle` packaging (`text.md`, `assets/`, `info.json`) for Bear/Ulysses, and optional `.amr` audio transcoding for broader web/Notion playback compatibility.
+- **Performance, Integrity & CLI Enhancements:**
+  - Streaming extraction and disk writes for large media files (`D-10`).
+  - Reading `media/mediaInfo.dat` SHA-256 hashes for extracted media integrity checks.
+  - Recursive source directory scanning and parallel note processing (with collision-safe target reservation).
+- **Deferred Infrastructure & Operations:**
+  - Optional server-side conversion backend (Option A: FastAPI/Docker, `D-19`) for notes exceeding browser/mobile RAM limits.
+  - Automated GitHub Actions CI workflow (Linux + Windows running `ruff`, `mypy`, `scripts/check.py`, and `pytest`).
 
 ---
 

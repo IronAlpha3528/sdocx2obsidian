@@ -27,6 +27,7 @@
 | **Audio Content** | Embedded voice/audio recordings (`.m4a`, `.amr`, `.mp3`, `.wav`, `.ogg`) | Audio transcription or waveform generation |
 | **Non-Media Attachments** | (None) | PDF attachments, document attachments, and non-image/non-audio files |
 | **Metadata** | Original `.sdocx` filename (used as the note title) | Creation/modification timestamps, tags, folders, YAML frontmatter |
+| **Output Target** | Obsidian Markdown (`.md` + `![[...]]` wikilink embeds) | Other Markdown app targets and packaging (Notion ZIP import with standard CommonMark links, Typora/VS Code/Joplin, Logseq shared `assets/`, Bear `.textbundle`) — tracked as future scope |
 
 ---
 
@@ -42,7 +43,7 @@
 ### FR-02: Plain Text Extraction
 * The system shall extract all typed text from each `.sdocx` note as raw plain text.
 * Rich-text formatting tags shall be stripped, leaving only the underlying plain text characters and standard paragraph breaks.
-* Non-image objects such as S-Pen ink, vector drawings, shapes, canvas stroke data, PDF drawings, PDF attachments, and document metadata are not currently implemented and shall be skipped with a non-fatal warning or treated as out-of-scope.
+* Unsupported non-image/non-audio objects encountered in a note shall be skipped with a non-fatal warning.
 
 ### FR-03: Contextual Inline Media Placement
 * The system shall preserve the exact sequential order in which text blocks, images, and audio clips appear within the original Samsung Note.

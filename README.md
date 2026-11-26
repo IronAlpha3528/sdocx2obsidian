@@ -37,6 +37,15 @@ A robust Python 3.11+ CLI tool that batch-converts Samsung Notes `.sdocx` export
 - **Rich Text Styling:** HTML/rich-text formatting tags (bold, italic, colors, tables, checkboxes) are stripped to raw plain text.
 - **Metadata Scraping:** Direct Samsung Cloud / AppData scraping, folder structures, tags, or YAML frontmatter.
 
+### Possible Future Scope
+- **Multi-App Markdown Output Modes:** Extending the renderer (`core/renderer.py`) with a format option (`--format` in the CLI and a selector in the web UI) to support other Markdown note-taking apps beyond Obsidian:
+  - **Notion / Standard CommonMark (Typora, VS Code, Joplin, GitHub):** Standard URL-encoded image embeds (`![filename](url_encoded_path)`), standard links or `<audio>` tags for audio clips, and optional `# Title` headings for Notion ZIP import.
+  - **App-Specific Packaging:** Shared `assets/` / outliner layout for Logseq, `.textbundle` packages for Bear/Ulysses, and optional `.amr` audio transcoding for web/Notion playback.
+- **Richer Note Content & Formats:** S-Pen ink/vector drawing rasterization (`.spi` / `.page`), PDF and document attachment extraction, rich-text formatting (bold, italics, headings, checklists, tables), and legacy `.sdoc` / `.snb` support.
+- **Metadata & Escaping Options:** Optional YAML frontmatter (creation/modification timestamps, tags, folder hierarchy) and optional Markdown character escaping (`R-06`).
+- **Performance, Integrity & CLI Scaling:** Streaming large media files (`D-10`), `mediaInfo.dat` SHA-256 integrity verification, recursive directory scanning, and parallel batch conversion.
+- **Deferred Operations:** Optional server-side conversion backend for oversized archives exceeding mobile/browser RAM, and automated GitHub Actions CI.
+
 ---
 
 ## Installation

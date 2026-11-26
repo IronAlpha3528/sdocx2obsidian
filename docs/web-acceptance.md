@@ -14,7 +14,7 @@ The web application is hosted as a static asset deployment on **Cloudflare Worke
 - **Deploy Command:** `npx wrangler deploy`
 - **Static Assets Directory (`site/wrangler.jsonc`):** `./dist` with `"not_found_handling": "404-page"` (serves prerendered route HTML files and `404.html`)
 - **Security Headers (`site/public/_headers`):**
-  - `Content-Security-Policy`: `default-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self' ws: https://cloudflareinsights.com; img-src 'self' data:; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';`
+  - `Content-Security-Policy`: `default-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self' ws: https://cloudflareinsights.com; img-src 'self' data:; font-src 'self'; manifest-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';`
   - `X-Content-Type-Options`: `nosniff`
   - `X-Frame-Options`: `DENY`
   - `Referrer-Policy`: `strict-origin-when-cross-origin`
