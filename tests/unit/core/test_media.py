@@ -71,3 +71,17 @@ def test_media_empty_stem_uses_fallback_with_index() -> None:
     catalog, warnings = build_media_catalog(raw_media)
     assert len(catalog) == 1
     assert catalog[0].output_name == "media-0.png"
+
+
+def test_media_resolve_duplicates_without_extension() -> None:
+    """Duplicate extensionless output names receive index suffixes."""
+    from sdocx2obsidian.core.media import _resolve_duplicates
+    from sdocx2obsidian.domain.models import MediaKind
+
+    entries = [
+        (0, "0@blob", "blob", MediaKind.IMAGE, b"a"),
+        (1, "1@blob", "blob", MediaKind.IMAGE, b"b"),
+    ]
+    catalog = _resolve_duplicates(entries)
+    assert catalog[0].output_name == "blob"
+    assert catalog[1].output_name == "blob_1"

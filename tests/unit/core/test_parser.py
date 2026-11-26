@@ -139,3 +139,25 @@ def test_parser_empty_or_short_note_bytes_raises_malformed_note_error() -> None:
     archive = SdocxArchive("note", b"short", {})
     with pytest.raises(MalformedNoteError):
         NoteParser().parse(archive)
+
+
+def test_parser_duplicate_media_ref_and_unreferenced_image() -> None:
+    """Duplicate media references drop with warning; unreferenced images warn and omit."""
+    builder = SdocxBuilder(
+        title="Note",
+        body="First \ufffc Second \ufffc End",
+        objects=[
+            ObjectDescriptor.image(media_index=0),
+            ObjectDescriptor.image(media_index=0),
+        ],
+        media_files={
+            "0@used.png": b"used",
+            "1@unused.jpg": b"unused",
+        },
+    )
+    archive = SdocxArchive("note", builder.build_note_bytes(), builder.media_files)
+    note = NoteParser().parse(archive)
+
+    assert list(note.assets.keys()) == ["used.png"]
+    assert any("Duplicate reference" in w for w in note.warnings)
+    assert any("Unreferenced image 'unused.jpg'" in w for w in note.warnings)

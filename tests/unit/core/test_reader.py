@@ -50,6 +50,9 @@ def test_reader_out_of_range_raises_malformed_note_error() -> None:
     with pytest.raises(MalformedNoteError):
         reader.seek(10)
 
+    with pytest.raises(MalformedNoteError):
+        reader.peek(10)
+
 
 def test_reader_odd_length_utf16_raises() -> None:
     """Odd byte length for UTF-16 string raises MalformedNoteError."""

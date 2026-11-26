@@ -50,3 +50,8 @@ def test_text_unicode_and_replacement_character() -> None:
     """Unicode characters and replacement characters are preserved."""
     raw = "Unicode: \u2764, Replacement: \ufffd"
     assert normalize_text_segment(raw) == "Unicode: \u2764, Replacement: \ufffd"
+
+
+def test_text_lone_surrogate_replaced() -> None:
+    """Lone surrogate characters are replaced with U+FFFD."""
+    assert normalize_text_segment("bad\ud800char") == "bad\ufffdchar"

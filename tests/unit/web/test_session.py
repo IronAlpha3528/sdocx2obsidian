@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import zipfile
+from pathlib import Path
 
 import pytest
 from tests.helpers.builder import ObjectDescriptor, SdocxBuilder
@@ -194,3 +195,35 @@ def test_session_lifecycle_errors() -> None:
     # Finish twice
     with pytest.raises(RuntimeError):
         session.finish()
+
+    # Abort after finish
+    with pytest.raises(RuntimeError):
+        session.abort()
+
+
+def test_session_bytes_budget_and_external_work_dir(tmp_path: Path) -> None:
+    """Enforces cumulative session byte budget and preserves caller-owned work_dir."""
+    note_bytes = _build_text_only(title="A", body="B")
+    strict_limits = LimitsProfile(
+        max_entries=10,
+        max_entry_size=10000,
+        max_total_size=10000,
+        max_ratio=50.0,
+        ratio_threshold=1000,
+        max_file_size=10000,
+        max_session_bytes=len(note_bytes) + 100,
+        max_session_files=10,
+    )
+    custom_dir = tmp_path / "custom_work"
+    session = ConversionSession(limits=strict_limits, work_dir=custom_dir)
+
+    r1 = session.convert_note("A.sdocx", note_bytes)
+    assert r1.status == "success"
+
+    # Second note pushes cumulative input over max_session_bytes
+    r2 = session.convert_note("B.sdocx", b"x" * 200)
+    assert r2.status == "failed"
+    assert r2.error_code == "UNSAFE_ARCHIVE"
+
+    session.finish()
+    assert custom_dir.exists()

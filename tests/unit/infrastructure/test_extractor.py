@@ -312,3 +312,20 @@ def test_extractor_read_only_leaves_source_unmodified(tmp_path: Path) -> None:
 
     assert digest_before == digest_after
     assert mtime_before == mtime_after
+
+
+def test_extractor_empty_entry_name_and_stream_overflow(tmp_path: Path) -> None:
+    """Empty entry name and mid-stream decompression overflow raise UnsafeArchiveError."""
+    from sdocx2obsidian.infrastructure.extractor import _read_chunked_stream, _validate_entry_name
+
+    empty_info = zipfile.ZipInfo("")
+    with pytest.raises(UnsafeArchiveError, match="empty entry name"):
+        _validate_entry_name(empty_info)
+
+    zip_bytes = _create_zip({"note.note": b"A" * 200})
+    source = tmp_path / "overflow.sdocx"
+    source.write_bytes(zip_bytes)
+    with zipfile.ZipFile(source, "r") as zf:
+        info = zf.getinfo("note.note")
+        with pytest.raises(UnsafeArchiveError, match="during read"):
+            _read_chunked_stream(zf, info, source, max_entry_size=100)

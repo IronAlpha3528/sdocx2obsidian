@@ -78,3 +78,18 @@ def test_zip_non_ascii_names(tmp_path: Path) -> None:
         # UTF-8 flag bit (bit 11: 0x800)
         assert info.flag_bits & 0x800 != 0
         assert zf.read(name).decode("utf-8") == "# Non-ascii title"
+
+
+def test_zip_ignores_directory_entries(tmp_path: Path) -> None:
+    """_add_zip_entry skips non-file paths and package_directory_to_zip skips empty dirs."""
+    from sdocx2obsidian.web.adapter import _add_zip_entry
+
+    dest = tmp_path / "dest"
+    dest.mkdir()
+    (dest / "EmptyDir").mkdir()
+    (dest / "Only.md").write_text("# Only\n", encoding="utf-8")
+
+    zip_bytes = package_directory_to_zip(dest)
+    with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zf:
+        assert zf.namelist() == ["Only.md"]
+        _add_zip_entry(zf, dest, Path("EmptyDir"))

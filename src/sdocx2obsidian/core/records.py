@@ -15,7 +15,6 @@ AUDIO_SIGS: tuple[bytes, ...] = (
     bytes([0x01, 0x00, 0x02, 0x1F, 0x03]),
     bytes([0x01, 0x00, 0x02, 0x17, 0x00]),
 )
-AUDIO_SIG = AUDIO_SIGS[0]
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,18 +96,16 @@ def _find_audio_signature(region: bytes) -> tuple[int, int]:
 
 
 def _classify_object(region: bytes) -> RawObjectRecord:
-    has_img = region.find(IMAGE_SIG) != -1
+    img_pos = region.find(IMAGE_SIG)
     audio_pos, sig_len = _find_audio_signature(region)
-    has_audio = audio_pos != -1
-    if has_img and has_audio:
+    if img_pos != -1 and audio_pos != -1:
         raise MalformedNoteError("Multiple object signatures found in one region")
-    if has_img:
-        pos = region.find(IMAGE_SIG)
-        if len(region) < pos + len(IMAGE_SIG) + 2:
+    if img_pos != -1:
+        if len(region) < img_pos + len(IMAGE_SIG) + 2:
             return RawObjectRecord(kind="unsupported")
-        idx = struct.unpack_from("<H", region, pos + len(IMAGE_SIG))[0]
+        idx = struct.unpack_from("<H", region, img_pos + len(IMAGE_SIG))[0]
         return RawObjectRecord(kind="image", media_index=idx)
-    if has_audio:
+    if audio_pos != -1:
         return _decode_audio_object(region, audio_pos, sig_len)
     return RawObjectRecord(kind="unsupported")
 
@@ -163,7 +160,6 @@ def read_records(data: bytes) -> RawRecordSet:
     body, _, _ = locate_text_record(data, b_reg_start, b_reg_end)
     placeholders = scan_placeholders(body)
 
-    warnings: list[str] = []
     objects: list[RawObjectRecord] = []
     for idx in range(2, len(markers)):
         m_start = markers[idx][0]
@@ -176,5 +172,4 @@ def read_records(data: bytes) -> RawRecordSet:
         body=body,
         placeholder_offsets=placeholders,
         objects=tuple(objects),
-        warnings=tuple(warnings),
     )

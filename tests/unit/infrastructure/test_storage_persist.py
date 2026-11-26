@@ -150,3 +150,30 @@ def test_storage_persist_staging_directory_always_removed(
 
     staging_dirs = [p for p in tmp_path.iterdir() if p.name.startswith(".sdocx2obsidian-staging-")]
     assert staging_dirs == []
+
+
+def test_storage_persist_assets_dir_collision_raises_persist_error(tmp_path: Path) -> None:
+    """If target assets directory appeared after resolve, PersistError is raised."""
+    repo = StorageRepository()
+    repo.prepare(tmp_path)
+    paths = repo.resolve_target_paths(tmp_path, "AssetRace")
+    paths.assets_dir.mkdir()
+
+    with pytest.raises(PersistError) as exc:
+        repo.persist(paths, "# Content\n", {"img.png": b"data"})
+    assert "assets directory already exists" in str(exc.value)
+
+
+def test_storage_verify_targets_free_missing_parent(tmp_path: Path) -> None:
+    """_verify_targets_free returns cleanly if parent directory does not exist."""
+    from sdocx2obsidian.domain.models import TargetPaths
+    from sdocx2obsidian.infrastructure.storage import _verify_targets_free
+
+    missing_parent = tmp_path / "does_not_exist"
+    paths = TargetPaths(
+        note_stem="Note",
+        md_path=missing_parent / "Note.md",
+        assets_dir=missing_parent / "Note_Assets",
+        assets_dir_name="Note_Assets",
+    )
+    _verify_targets_free(paths, False)

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from sdocx2obsidian.domain.naming import MAX_NOTE_STEM_LEN
 from sdocx2obsidian.infrastructure.storage import StorageRepository
 
@@ -92,4 +94,22 @@ def test_storage_resolve_creates_nothing_on_disk(tmp_path: Path) -> None:
     repo = StorageRepository()
     repo.resolve_target_paths(tmp_path, "NonExistent")
     assert list(tmp_path.iterdir()) == []
+
+
+def test_storage_resolve_missing_or_unreadable_dest_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Missing dest_dir or OSError during iterdir falls back to empty existing set."""
+    repo = StorageRepository()
+    missing = tmp_path / "missing_dest"
+    assert repo.resolve_target_paths(missing, "Note").md_path.name == "Note.md"
+
+    existing_dir = tmp_path / "unreadable"
+    existing_dir.mkdir()
+
+    def _raise_oserror(self: Path) -> object:
+        raise OSError("Permission denied")
+
+    monkeypatch.setattr(Path, "iterdir", _raise_oserror)
+    assert repo.resolve_target_paths(existing_dir, "Note").md_path.name == "Note.md"
 

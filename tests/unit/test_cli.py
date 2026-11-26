@@ -141,3 +141,44 @@ def test_main_module_execution() -> None:
     finally:
         sys.argv = original_argv
 
+
+def test_cli_unexpected_exception_exits_1(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Unexpected crash inside batch runner prints fatal error and exits 1."""
+    from sdocx2obsidian.application.service import ConversionService
+
+    source = tmp_path / "source"
+    source.mkdir()
+    dest = tmp_path / "dest"
+
+    def _boom(_self: object, _src: Path, _dst: Path) -> object:
+        raise RuntimeError("unexpected boom")
+
+    monkeypatch.setattr(ConversionService, "convert_batch", _boom)
+    result = runner.invoke(app, ["-s", str(source), "-d", str(dest)])
+    assert result.exit_code == 1
+    assert "Fatal crash" in result.output
+
+
+def test_cli_reporter_prints_warnings(tmp_path: Path) -> None:
+    """Warnings in ConversionOutcome are printed by RichProgressReporter."""
+    from rich.console import Console
+
+    from sdocx2obsidian.cli import RichProgressReporter
+    from sdocx2obsidian.domain.models import ConversionOutcome, OutcomeStatus
+
+    out_console = Console(record=True)
+    reporter = RichProgressReporter(out_console)
+    outcome = ConversionOutcome(
+        source=tmp_path / "warn.sdocx",
+        status=OutcomeStatus.SUCCEEDED,
+        markdown_path=tmp_path / "warn.md",
+        asset_count=0,
+        warnings=("Skipped unsupported object",),
+        error=None,
+    )
+    reporter.finished(outcome)
+    text = out_console.export_text()
+    assert "[WARN] warn.sdocx: Skipped unsupported object" in text
+

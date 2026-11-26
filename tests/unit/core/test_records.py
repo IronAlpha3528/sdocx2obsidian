@@ -189,3 +189,29 @@ def test_records_image_with_embedded_small_integers_does_not_collide() -> None:
     assert rec.media_index == 3
 
 
+def test_records_malformed_and_truncated_object_edges() -> None:
+    """Covers dual signatures, truncated image, non-GUID 36-byte candidate, and audio edges."""
+    from tests.helpers.builder import IMAGE_SIG
+
+    from sdocx2obsidian.core.records import _classify_object, _decode_audio_object
+
+    # Length == 36 without valid GUID shape
+    non_guid = b"\x24\x00" + b"Z" * 36
+    assert find_guid_markers(non_guid) == []
+
+    # Multiple object signatures in one region
+    both_sigs = IMAGE_SIG + struct.pack("<H", 0) + AUDIO_RECORDED_SIG
+    with pytest.raises(MalformedNoteError):
+        _classify_object(both_sigs)
+
+    # Truncated image signature (missing 2-byte media index)
+    assert _classify_object(IMAGE_SIG + b"\x00").kind == "unsupported"
+
+    # Audio truncated before title length and before duration length
+    sig = AUDIO_RECORDED_SIG
+    assert _decode_audio_object(sig + struct.pack("<I", 1), 0, len(sig)).kind == "unsupported"
+    t_bytes = "Hi".encode("utf-16le")
+    no_dur_len = sig + struct.pack("<IH", 1, 2) + t_bytes
+    assert _decode_audio_object(no_dur_len, 0, len(sig)).kind == "unsupported"
+
+
